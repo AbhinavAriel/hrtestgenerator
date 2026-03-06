@@ -1,8 +1,11 @@
 import { useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { useHrData } from "../hooks/useHrData";
+import { getHrTestReport } from "../api/hrApi";
 import HrCreateEditModal from "../components/HrCreateEditModal";
 import HrDeleteModal from "../components/HrDeleteModal";
 import HrTable from "../components/HrTable";
+import HrTestReportView from "../components/HrTestReportView";
 
 export default function HrCreateTest() {
   const {
@@ -34,25 +37,51 @@ export default function HrCreateTest() {
   const [activeTab, setActiveTab] = useState("table");
   const [openTabs, setOpenTabs] = useState([]);
 
-  const handleOpenTab = (row) => {
+  const handleOpenTab = async (row) => {
     const testId = row?.testId ?? row?.TestId ?? row?.id ?? row?.Id;
     if (!testId) return;
 
-    setOpenTabs((prev) => {
-      const exists = prev.some((x) => x.key === testId);
-      if (exists) return prev;
+    const existing = openTabs.find((x) => x.key === testId);
+    if (existing) {
+      setActiveTab(testId);
+      return;
+    }
 
-      return [
-        ...prev,
-        {
-          key: testId,
-          label: row?.applicantName ?? row?.ApplicantName ?? "Details",
-          data: row,
-        },
-      ];
-    });
+    const label = row?.applicantName ?? row?.ApplicantName ?? "Details";
+
+    setOpenTabs((prev) => [
+      ...prev,
+      {
+        key: testId,
+        label,
+        loading: true,
+        report: null,
+      },
+    ]);
 
     setActiveTab(testId);
+
+    try {
+      const report = await getHrTestReport(testId);
+
+      setOpenTabs((prev) =>
+        prev.map((tab) =>
+          tab.key === testId
+            ? { ...tab, loading: false, report }
+            : tab
+        )
+      );
+    } catch (e) {
+      setOpenTabs((prev) =>
+        prev.map((tab) =>
+          tab.key === testId
+            ? { ...tab, loading: false, report: null }
+            : tab
+        )
+      );
+
+      toast.error(e?.message || "Failed to load report");
+    }
   };
 
   const handleCloseTab = (tabKey) => {
@@ -67,8 +96,8 @@ export default function HrCreateTest() {
     });
   };
 
-  const activeRow = useMemo(
-    () => openTabs.find((x) => x.key === activeTab)?.data || null,
+  const activeTabData = useMemo(
+    () => openTabs.find((x) => x.key === activeTab) || null,
     [openTabs, activeTab]
   );
 
@@ -114,7 +143,7 @@ export default function HrCreateTest() {
         />
 
         <div className="mt-8">
-          <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-wrap items-end gap-2 border-b border-gray-200">
             <button
               type="button"
               onClick={() => setActiveTab("table")}
@@ -168,94 +197,12 @@ export default function HrCreateTest() {
               pageSize={pageSize}
               onPageChange={goToPage}
             />
-          ) : activeRow ? (
-            <div className="rounded-b-2xl rounded-tr-2xl border border-t-0 border-gray-200 bg-white p-6 shadow-2xl">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-blue-800">Candidate Details</h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Details for the selected candidate test record.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("table")}
-                  className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50"
-                >
-                  Back to Table
-                </button>
-              </div>
-
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Candidate</div>
-                  <div className="mt-1 text-base font-semibold text-gray-900">
-                    {activeRow?.applicantName ?? activeRow?.ApplicantName ?? "-"}
-                  </div>
-                  <div className="mt-1 text-sm text-gray-600">
-                    {activeRow?.email ?? activeRow?.Email ?? "-"}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Level</div>
-                  <div className="mt-1 text-base font-semibold text-gray-900">
-                    {activeRow?.level ?? activeRow?.Level ?? "-"}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Status</div>
-                  <div className="mt-1 text-base font-semibold capitalize text-gray-900">
-                    {activeRow?.status ?? activeRow?.Status ?? "-"}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Questions</div>
-                  <div className="mt-1 text-base font-semibold text-gray-900">
-                    {activeRow?.totalQuestions ?? activeRow?.TotalQuestions ?? "-"}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Duration</div>
-                  <div className="mt-1 text-base font-semibold text-gray-900">
-                    {activeRow?.durationMinutes ?? activeRow?.DurationMinutes ?? "-"} min
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Answered</div>
-                  <div className="mt-1 text-base font-semibold text-gray-900">
-                    {activeRow?.answeredCount ?? activeRow?.AnsweredCount ?? "-"}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Correct</div>
-                  <div className="mt-1 text-base font-semibold text-gray-900">
-                    {activeRow?.correctCount ?? activeRow?.CorrectCount ?? "-"}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 lg:col-span-2">
-                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Tech Stack</div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {(activeRow?.techStacks ?? activeRow?.TechStacks ?? []).map((tech) => (
-                      <span
-                        key={tech}
-                        className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
+          ) : (
+            <HrTestReportView
+              report={activeTabData?.report}
+              loading={activeTabData?.loading}
+            />
+          )}
         </div>
       </div>
     </div>

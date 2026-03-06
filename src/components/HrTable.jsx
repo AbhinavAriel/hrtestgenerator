@@ -18,9 +18,11 @@ export default function HrTable({
 
   const scrollRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
+
   const dragStateRef = useRef({
     startX: 0,
     scrollLeft: 0,
+    moved: false,
   });
 
   const handleMouseDown = (e) => {
@@ -31,6 +33,7 @@ export default function HrTable({
     dragStateRef.current = {
       startX: e.pageX - el.offsetLeft,
       scrollLeft: el.scrollLeft,
+      moved: false,
     };
   };
 
@@ -42,6 +45,11 @@ export default function HrTable({
 
     const x = e.pageX - el.offsetLeft;
     const walk = x - dragStateRef.current.startX;
+
+    if (Math.abs(walk) > 6) {
+      dragStateRef.current.moved = true;
+    }
+
     el.scrollLeft = dragStateRef.current.scrollLeft - walk;
   };
 
@@ -51,6 +59,11 @@ export default function HrTable({
 
   const handleMouseLeave = () => {
     setIsDragging(false);
+  };
+
+  const handleRowClick = (row) => {
+    if (dragStateRef.current.moved) return;
+    onOpenTab?.(row);
   };
 
   const handleCopyLink = async (row) => {
@@ -89,11 +102,11 @@ export default function HrTable({
   };
 
   return (
-    <div className="rounded-2xl rounded-tl-none border border-gray-200 bg-white shadow-2xl">
-      <div className="flex flex-col gap-2 border-b border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-end">
-        {/* <div>
+    <div className="mt-8 rounded-2xl border border-gray-200 bg-white shadow-2xl">
+      <div className="flex flex-col gap-2 border-b border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
           <h2 className="text-lg font-semibold text-blue-800">Created Tests</h2>
-        </div> */}
+        </div>
 
         <div className="text-sm text-gray-600">
           {loadingTable ? "Loading..." : `${totalCount} record(s)`}
@@ -140,24 +153,20 @@ export default function HrTable({
 
               const fullName = r?.applicantName ?? r?.ApplicantName ?? "-";
               const email = r?.email ?? r?.Email ?? "-";
-
               const level = r?.level ?? r?.Level ?? "-";
               const totalQuestions = r?.totalQuestions ?? r?.TotalQuestions ?? "-";
               const durationMinutes = r?.durationMinutes ?? r?.DurationMinutes ?? "-";
-
               const tech = r?.techStacks ?? r?.TechStacks ?? [];
-
               const statusRaw = r?.status ?? r?.Status ?? "";
               const status = String(statusRaw).toLowerCase();
               const isSubmitted = status === "submitted";
-
               const answered = r?.answeredCount ?? r?.AnsweredCount ?? 0;
               const correct = r?.correctCount ?? r?.CorrectCount ?? 0;
 
               return (
                 <tr
                   key={rowKey}
-                  onClick={() => onOpenTab?.(r)}
+                  onClick={() => handleRowClick(r)}
                   className="border-b border-gray-100 text-center hover:bg-gray-200 cursor-pointer"
                 >
                   <td className="p-4 text-gray-700">{serialNo}</td>
@@ -183,9 +192,7 @@ export default function HrTable({
                         .map((name) => (
                           <span
                             key={name}
-                            className={`inline-flex items-center rounded-full border px-2 py-1 text-xs font-semibold ${pillClass(
-                              name
-                            )}`}
+                            className={`inline-flex items-center rounded-full border px-2 py-1 text-xs font-semibold ${pillClass(name)}`}
                           >
                             {name}
                           </span>
@@ -194,7 +201,6 @@ export default function HrTable({
                   </td> */}
 
                   <td className="p-4 capitalize">{status || "-"}</td>
-
                   <td className="p-4">{isSubmitted ? answered : "-"}</td>
                   <td className="p-4">{isSubmitted ? correct : "-"}</td>
 
@@ -202,7 +208,6 @@ export default function HrTable({
                     <div className="flex items-center justify-end gap-1.5">
                       <button
                         type="button"
-                        title="edit"
                         onClick={(e) => {
                           e.stopPropagation();
                           onEdit?.(r);
@@ -214,7 +219,6 @@ export default function HrTable({
 
                       <button
                         type="button"
-                        title="delete"
                         onClick={(e) => {
                           e.stopPropagation();
                           onDelete?.(r);
@@ -227,7 +231,6 @@ export default function HrTable({
                       {isSubmitted ? (
                         <button
                           type="button"
-                          title="preview"
                           disabled={!testId}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -240,7 +243,6 @@ export default function HrTable({
                       ) : (
                         <button
                           type="button"
-                          title="copy link"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleCopyLink(r);
