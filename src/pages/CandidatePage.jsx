@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getHrTestById, getHrTestByToken } from "../api/hrApi";
+import { getHrTestByToken } from "../api/hrApi";
 import { useTest } from "../context/TestContext";
 import toast from "react-hot-toast";
 
@@ -22,9 +22,7 @@ function FullPageLoader({ message = "Loading..." }) {
 export default function CandidatePage() {
   const navigate = useNavigate();
 
-  // ✅ IMPORTANT: route param is token now
   const { testId: token } = useParams();
-
   const { setUser, setTestId } = useTest();
   const safeToken = useMemo(() => (token || "").trim(), [token]);
 
@@ -47,37 +45,15 @@ export default function CandidatePage() {
 
       if (!safeToken) {
         toast.error("Invalid test link.");
-        navigate("/", { replace: true });
+        navigate("/admin-login", { replace: true });
         return;
       }
 
       try {
         setChecking(true);
 
-        // ✅ 1) Validate token + resolve Guid
-        const tokenInfo = await getHrTestByToken(safeToken);
-
-        const resolvedTestId =
-          tokenInfo?.testId ||
-          tokenInfo?.TestId ||
-          null;
-
-        if (!resolvedTestId) {
-          throw new Error("Invalid or expired test link.");
-        }
-
-        const tokenStatus = (tokenInfo?.status || tokenInfo?.Status || "")
-          .toString()
-          .trim()
-          .toLowerCase();
-
-        if (tokenStatus === "submitted") {
-          navigate(`/test/${safeToken}/already-submitted`, { replace: true });
-          return;
-        }
-
-        // ✅ 2) Load test details by Guid (backend will also check expiry)
-        const testDetail = await getHrTestById(resolvedTestId);
+        // Candidate must only use public token endpoint
+        const testDetail = await getHrTestByToken(safeToken);
 
         const test = testDetail?.test || testDetail?.Test || null;
 
@@ -88,7 +64,7 @@ export default function CandidatePage() {
           testDetail?.SubmittedAtUtc ??
           null;
 
-        const detailStatus = (
+        const status = (
           test?.status ??
           test?.Status ??
           testDetail?.status ??
@@ -99,7 +75,7 @@ export default function CandidatePage() {
           .trim()
           .toLowerCase();
 
-        const isSubmitted = Boolean(submittedAt) || detailStatus === "submitted";
+        const isSubmitted = Boolean(submittedAt) || status === "submitted";
 
         if (isSubmitted) {
           navigate(`/test/${safeToken}/already-submitted`, { replace: true });
@@ -114,8 +90,15 @@ export default function CandidatePage() {
           applicant?.id ||
           applicant?.Id;
 
-        if (!applicantId) {
-          throw new Error("Applicant not linked to this test.");
+        const resolvedTestId =
+          testDetail?.testId ||
+          testDetail?.TestId ||
+          test?.id ||
+          test?.Id ||
+          null;
+
+        if (!applicantId || !resolvedTestId) {
+          throw new Error("Applicant or test details are missing for this link.");
         }
 
         const fullName =
@@ -132,7 +115,7 @@ export default function CandidatePage() {
         const phone = onlyDigits(applicant?.phoneNumber || applicant?.PhoneNumber || "");
 
         const next = {
-          testId: resolvedTestId,   // ✅ store real Guid
+          testId: resolvedTestId,
           applicantId,
           name: fullName || "",
           email: email || "",
@@ -143,7 +126,6 @@ export default function CandidatePage() {
 
         setForm(next);
 
-        // ✅ store Guid in context for assessment APIs
         setTestId(resolvedTestId);
         setUser({
           id: applicantId,

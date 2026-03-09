@@ -57,12 +57,10 @@ export function useAssessmentActions({
 
     const selectedOptionId = answersRef.current?.[currentQuestion.id] ?? null;
 
-    // ✅ skip allowed
     if (!selectedOptionId) {
       return allowSkip ? true : false;
     }
 
-    // prevent double save
     if (savingRef.current) return false;
     savingRef.current = true;
 
@@ -84,14 +82,6 @@ export function useAssessmentActions({
     }
   };
 
-  /**
-   * Submits ALL answers:
-   * - if answered -> submitAnswer(optionId)
-   * - if not answered -> submitAnswer(null) (only if backend supports null)
-   *
-   * If your backend doesn't support null selectedOptionId rows,
-   * you can comment out the null submissions section.
-   */
   const submitAllAnswers = async () => {
     const applicantId = getApplicantId();
     if (!applicantId) {
@@ -106,12 +96,10 @@ export function useAssessmentActions({
 
     const elapsedSeconds = typeof calcElapsedSeconds === "function" ? calcElapsedSeconds() : 0;
 
-    // ✅ Ensure we submit all questions, unanswered => null
     for (const q of questions || []) {
       const selectedOptionId = answersRef.current?.[q.id] ?? null;
 
       try {
-        // If answered, always submit
         if (selectedOptionId) {
           await submitAnswer({
             testId,
@@ -123,8 +111,6 @@ export function useAssessmentActions({
           continue;
         }
 
-        // ✅ If unanswered, submit null (ONLY if your backend allows it)
-        // If backend doesn't allow null, simply SKIP this block.
         await submitAnswer({
           testId,
           applicantId,
@@ -147,14 +133,12 @@ export function useAssessmentActions({
     submittedRef.current = true;
 
     try {
-      // ✅ Save current (if selected) but DO NOT block submit if skipped
       const okCurrent = await saveCurrentAnswer({ allowSkip: true });
       if (!okCurrent) {
         submittedRef.current = false;
         return;
       }
 
-      // ✅ submit all answers (answered + unanswered as null)
       const okAll = await submitAllAnswers();
       if (!okAll) {
         submittedRef.current = false;
@@ -175,7 +159,6 @@ export function useAssessmentActions({
   const handlePrev = async () => {
     if (!currentQuestion || submittedRef.current) return;
 
-    // ✅ save only if answered (skip allowed)
     await saveCurrentAnswer({ allowSkip: true });
 
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
@@ -184,7 +167,6 @@ export function useAssessmentActions({
   const handleNext = async () => {
     if (!currentQuestion || submittedRef.current) return;
 
-    // ✅ save only if answered (skip allowed) - no toast
     const ok = await saveCurrentAnswer({ allowSkip: true });
     if (!ok) return;
 

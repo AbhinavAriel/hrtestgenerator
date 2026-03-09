@@ -63,6 +63,17 @@ export default function HrTable({
 
   const handleRowClick = (row) => {
     if (dragStateRef.current.moved) return;
+
+    const statusRaw = row?.status ?? row?.Status ?? "";
+    const status = String(statusRaw).trim().toLowerCase();
+
+    if (status !== "submitted") {
+      toast("This test has not been attempted or submitted yet.", {
+        icon: "ℹ️",
+      });
+      return;
+    }
+
     onOpenTab?.(row);
   };
 
@@ -102,7 +113,7 @@ export default function HrTable({
   };
 
   return (
-    <div className="mt-8 rounded-2xl border border-gray-200 bg-white shadow-2xl">
+    <div className="rounded-2xl rounded-tl-none border border-gray-200 bg-white shadow-2xl">
       <div className="flex flex-col gap-2 border-b border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-blue-800">Created Tests</h2>
@@ -124,7 +135,7 @@ export default function HrTable({
         <table className="min-w-full text-left text-sm">
           <thead className="text-xs tracking-wide text-blue-800">
             <tr className="border-b border-gray-300 text-center">
-              <th className="px-6 py-3">S.No</th>
+              <th className="px-3 py-3">S.No</th>
               <th className="px-6 py-3">Candidate</th>
               <th className="px-6 py-3">Level</th>
               <th className="px-6 py-3">Questions</th>
@@ -169,7 +180,7 @@ export default function HrTable({
                   onClick={() => handleRowClick(r)}
                   className="border-b border-gray-100 text-center hover:bg-gray-200 cursor-pointer"
                 >
-                  <td className="p-4 text-gray-700">{serialNo}</td>
+                  <td className="px-3 py-4 text-gray-700">{serialNo}</td>
 
                   <td className="p-4">
                     <div className="font-semibold text-gray-900">{fullName}</div>

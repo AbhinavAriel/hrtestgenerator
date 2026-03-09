@@ -5,10 +5,6 @@ export function isValidEmail(email) {
   return /^\S+@\S+\.\S+$/.test(e);
 }
 
-/**
- * Validations only. No design changes.
- * Returns { fieldName: "error" }
- */
 export function validateCreateTestForm(form) {
   const errors = {};
 

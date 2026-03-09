@@ -44,14 +44,11 @@ const normalizeRow = (r) => {
 
     createdAtUtc: r.createdAtUtc ?? r.CreatedAtUtc ?? r.createdAt ?? r.CreatedAt ?? null,
     submittedAtUtc: r.submittedAtUtc ?? r.SubmittedAtUtc ?? null,
-
-    // ✅ ADD THESE
     testToken: r.testToken ?? r.TestToken ?? null,
     expiresAtUtc: r.expiresAtUtc ?? r.ExpiresAtUtc ?? null,
   };
 };
 
-// ✅ reads both camelCase + PascalCase payloads
 const readPaged = (res) => {
   if (!res || typeof res !== "object") return null;
 
@@ -113,7 +110,6 @@ export function useHrData() {
     if (!form.firstName.trim()) next.firstName = "First name is required";
     if (!form.lastName.trim()) next.lastName = "Last name is required";
 
-    // ✅ only required, no format validation
     if (!form.email.trim()) next.email = "Email is required";
 
     if (!phone) next.phoneNumber = "Phone number is required";
@@ -154,7 +150,6 @@ export function useHrData() {
       try {
         const res = await getHrTests({ page: targetPage, pageSize });
 
-        // ✅ paged response (camel or Pascal)
         const paged = readPaged(res);
         if (paged) {
           setRows(paged.items.map(normalizeRow));
@@ -164,7 +159,6 @@ export function useHrData() {
           return;
         }
 
-        // ✅ fallback: old endpoint returning array
         if (Array.isArray(res)) {
           setRows(res.map(normalizeRow));
           setTotalCount(res.length);

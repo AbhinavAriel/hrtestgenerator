@@ -29,16 +29,29 @@ export default function HrCreateEditModal({
       .map((t) => {
         if (!t) return null;
 
-        // already normalized
         if (t.value != null && t.label != null) return { value: String(t.value), label: String(t.label) };
 
-        // backend shape
         if (t.id != null && t.name != null) return { value: String(t.id), label: String(t.name) };
 
         return null;
       })
       .filter(Boolean);
   })();
+
+  const pillClass = (name = "") => {
+    const n = name.toLowerCase();
+    if (n.includes("react")) return "bg-blue-50 text-blue-700 border-blue-200";
+    if (n.includes("angular")) return "bg-red-50 text-red-700 border-red-200";
+    if (n.includes("javascript")) return "bg-yellow-50 text-yellow-700 border-yellow-200";
+    if (n.includes("typescript")) return "bg-indigo-50 text-indigo-700 border-indigo-200";
+    if (n.includes("c#") || n.includes("csharp")) return "bg-purple-50 text-purple-700 border-purple-200";
+    if (n.includes("python")) return "bg-green-50 text-green-700 border-green-200";
+    if (n.includes("html")) return "bg-red-100 text-red-700 border-red-200";
+    if (n.includes("css")) return "bg-purple-50 text-purple-700 border-purple-200";
+    return "bg-gray-50 text-gray-700 border-gray-200";
+  };
+
+  const removeSpaces = (value) => (value || "").replace(/\s+/g, "");
 
   return (
     <Modal
@@ -56,7 +69,7 @@ export default function HrCreateEditModal({
           <Field label="First Name" error={errors.firstName}>
             <input
               value={form.firstName}
-              onChange={(e) => setField("firstName", e.target.value)}
+              onChange={(e) => setField("firstName", removeSpaces(e.target.value))}
               className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-400"
               placeholder="e.g. John"
               disabled={submitting}
@@ -66,7 +79,7 @@ export default function HrCreateEditModal({
           <Field label="Last Name" error={errors.lastName}>
             <input
               value={form.lastName}
-              onChange={(e) => setField("lastName", e.target.value)}
+              onChange={(e) => setField("lastName", removeSpaces(e.target.value))}
               className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-400"
               placeholder="e.g. Doe"
               disabled={submitting}
@@ -100,7 +113,7 @@ export default function HrCreateEditModal({
             <p className="text-xs font-bold tracking-wide text-black">TEST DETAILS</p>
           </div>
 
-          <Field label="Total Questions"  error={errors.totalQuestions}>
+          <Field label="Total Questions" error={errors.totalQuestions}>
             <input
               value={form.totalQuestions}
               onChange={(e) => setField("totalQuestions", e.target.value)}
@@ -138,11 +151,11 @@ export default function HrCreateEditModal({
 
           <Field label="Tech Stack" hint="multi-select dropdown" error={errors.techStackIds}>
             <MultiSelectDropdown
-              options={techOptions}                
-              value={form.techStackIds || []}      
+              options={techOptions}
+              value={form.techStackIds || []}
               onChange={(v) => setField("techStackIds", v)}
-              getOptionLabel={(o) => o.label}      
-              getOptionValue={(o) => o.value}   
+              getOptionLabel={(o) => o.label}
+              getOptionValue={(o) => o.value}
               disabled={submitting}
               placeholder="Search & select tech..."
               error={!!errors.techStackIds}

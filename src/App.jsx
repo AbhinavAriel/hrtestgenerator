@@ -7,17 +7,32 @@ import HrCreateTest from "./pages/HrCreateTest";
 import CandidatePage from "./pages/CandidatePage";
 import TestAlreadySubmitted from "./pages/TestAlreadySubmitted";
 import HrTestPreview from "./pages/HrTestPreview";
-
-import { RequireCandidate, RequireAgreed, RequireSubmitted } from "./routes/ProtectedRoute";
+import AdminLogin from "./pages/AdminLogin";
+import CreateQuestion from "./pages/CreateQuestion";
+import {
+  RequireAdmin,
+  RequireCandidate,
+  RequireAgreed,
+  RequireSubmitted,
+} from "./routes/ProtectedRoute";
 
 function App() {
   return (
     <TestProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/admin" element={<HrCreateTest />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+
+          <Route element={<RequireAdmin />}>
+            <Route path="/admin" element={<HrCreateTest />} />
+            <Route path="/admin/questions/create" element={<CreateQuestion />} />
+            <Route path="/hr/tests/:testId/preview" element={<HrTestPreview />} />
+          </Route>
+
           <Route path="/test/:testId" element={<CandidatePage />} />
           <Route path="/policy" element={<PolicyAgreement />} />
+          <Route path="/test-submitted" element={<TestAlreadySubmitted />} />
+          <Route path="/test/:testId/already-submitted" element={<TestAlreadySubmitted />} />
 
           <Route element={<RequireCandidate />}>
             <Route element={<RequireAgreed />}>
@@ -28,11 +43,8 @@ function App() {
               <Route path="/result" element={<Result />} />
             </Route>
           </Route>
-          <Route path="/hr/tests/:testId/preview" element={<HrTestPreview />} />
 
-          <Route path="/test/:testId/already-submitted" element={<TestAlreadySubmitted />} />
-
-          <Route path="*" element={<Navigate to="/admin" replace />} />
+          <Route path="*" element={<Navigate to="/admin-login" replace />} />
         </Routes>
       </BrowserRouter>
     </TestProvider>

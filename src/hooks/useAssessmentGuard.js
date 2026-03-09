@@ -23,9 +23,7 @@ export function useAssessmentGuard({ submittedRef, onAutoSubmit, incrementTabWar
       toast.error("Too many violations. Submitting your test now...");
       autoSubmittingRef.current = true;
 
-      // fire once
       Promise.resolve(onAutoSubmit?.()).finally(() => {
-        // do nothing – Assessment will redirect on submit
       });
     };
 

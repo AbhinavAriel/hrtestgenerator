@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { getHrTestReport } from "../api/hrApi";
 
@@ -7,6 +7,29 @@ export default function HrTestPreview() {
   const { testId } = useParams();
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState(null);
+  const navigate = useNavigate();
+
+  const goBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/admin", { replace: true });
+  };
+
+  const pillClass = (name = "") => {
+    const n = name.toLowerCase();
+    if (n.includes("react")) return "bg-blue-50 text-blue-700 border-blue-200";
+    if (n.includes("angular")) return "bg-red-50 text-red-700 border-red-200";
+    if (n.includes("javascript")) return "bg-yellow-50 text-yellow-700 border-yellow-200";
+    if (n.includes("typescript")) return "bg-indigo-50 text-indigo-700 border-indigo-200";
+    if (n.includes("c#") || n.includes("csharp")) return "bg-purple-50 text-purple-700 border-purple-200";
+    if (n.includes("python")) return "bg-green-50 text-green-700 border-green-200";
+    if (n.includes("html")) return "bg-red-100 text-red-700 border-red-200";
+    if (n.includes("css")) return "bg-purple-50 text-purple-700 border-purple-200";
+    return "bg-gray-50 text-gray-700 border-gray-200";
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -42,7 +65,10 @@ export default function HrTestPreview() {
 
   return (
     <div className="min-h-screen bg-blue-50">
-      <div className="mx-auto max-w-5xl px-4 py-8">
+      <div className="max-w-6xl mx-auto py-8">
+        <button onClick={goBack} className="bg-blue-100 border border-blue-200 hover:bg-blue-200 cursor-pointer text-xs py-1 px-3 rounded-lg text-blue-600 font-semibold">Go back</button>
+      </div>
+      <div className="mx-auto max-w-5xl px-4 pb-8">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xl">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -115,7 +141,7 @@ export default function HrTestPreview() {
             {techStacks.map((t) => (
               <span
                 key={t}
-                className="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700"
+                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold  ${pillClass(t)}`}
               >
                 {t}
               </span>

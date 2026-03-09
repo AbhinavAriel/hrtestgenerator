@@ -7,6 +7,20 @@ export default function HrTestReportView({ report, loading = false }) {
     return <div className="p-6 text-gray-600">No report found.</div>;
   }
 
+  const pillClass = (name = "") => {
+    const n = name.toLowerCase();
+    if (n.includes("react")) return "bg-blue-50 text-blue-700 border-blue-200";
+    if (n.includes("angular")) return "bg-red-50 text-red-700 border-red-200";
+    if (n.includes("javascript")) return "bg-yellow-50 text-yellow-700 border-yellow-200";
+    if (n.includes("typescript")) return "bg-indigo-50 text-indigo-700 border-indigo-200";
+    if (n.includes("c#") || n.includes("csharp")) return "bg-purple-50 text-purple-700 border-purple-200";
+    if (n.includes("python")) return "bg-green-50 text-green-700 border-green-200";
+    if (n.includes("html")) return "bg-red-100 text-red-700 border-red-200";
+    if (n.includes("css")) return "bg-purple-50 text-purple-700 border-purple-200";
+    return "bg-gray-50 text-gray-700 border-gray-200";
+  };
+
+
   const questions = report.questions ?? report.Questions ?? [];
   const techStacks = report.techStacks ?? report.TechStacks ?? [];
 
@@ -27,62 +41,62 @@ export default function HrTestReportView({ report, loading = false }) {
         </div>
 
         <div className="grid grid-cols-4 mt-4 gap-3">
-            <div className="rounded-xl border border-yellow-100 bg-yellow-50 p-3 shadow-md ">
-              <div className="text-xs text-gray-500">Total Questions</div>
-              <div className="text-lg font-bold text-gray-900">
-                {report.totalQuestions ?? report.TotalQuestions ?? 0}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 shadow-md">
-              <div className="text-xs text-gray-500">Duration</div>
-              <div className="text-lg font-bold text-gray-900">
-                {report.durationMinutes ?? report.DurationMinutes ?? 0} min
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-red-100 bg-red-50 p-3 shadow-md">
-              <div className="text-xs text-gray-500">Answered</div>
-              <div className="text-lg font-bold text-gray-900">
-                {report.answeredCount ?? report.AnsweredCount ?? 0}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-green-100 bg-green-50 p-3 shadow-md">
-              <div className="text-xs text-gray-500">Correct</div>
-              <div className="text-lg font-bold text-gray-900">
-                {report.correctCount ?? report.CorrectCount ?? 0}
-              </div>
+          <div className="rounded-xl border border-yellow-100 bg-yellow-50 p-3 shadow-md ">
+            <div className="text-xs text-gray-500">Total Questions</div>
+            <div className="text-lg font-bold text-gray-900">
+              {report.totalQuestions ?? report.TotalQuestions ?? 0}
             </div>
           </div>
 
-          <div className="mt-5 grid gap-4 ">
-            <div>
-              <div className="text-sm text-gray-800 mb-2">Candidate</div>
-              <div className="grid grid-cols-3 w-full">
-                <div className="">
-                  <div className="text-xs text-gray-500">name</div>
-                  <div className="font-semibold text-sm text-gray-900">
-                    {report.applicantName ?? report.ApplicantName}
-                  </div>
-                </div>
-                <div className="">
-                  <div className="text-xs text-gray-500">email</div>
-                  <div className="text-sm font-semibold text-gray-900">{report.email ?? report.Email}</div>
-                </div>
-                <div className="">
-                  <div className="text-xs text-gray-500">phone</div>
-                  <div className="text-sm font-semibold text-gray-900">{report.phoneNumber ?? report.PhoneNumber}</div>
+          <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 shadow-md">
+            <div className="text-xs text-gray-500">Duration</div>
+            <div className="text-lg font-bold text-gray-900">
+              {report.durationMinutes ?? report.DurationMinutes ?? 0} min
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-red-100 bg-red-50 p-3 shadow-md">
+            <div className="text-xs text-gray-500">Answered</div>
+            <div className="text-lg font-bold text-gray-900">
+              {report.answeredCount ?? report.AnsweredCount ?? 0}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-green-100 bg-green-50 p-3 shadow-md">
+            <div className="text-xs text-gray-500">Correct</div>
+            <div className="text-lg font-bold text-gray-900">
+              {report.correctCount ?? report.CorrectCount ?? 0}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 ">
+          <div>
+            <div className="text-sm text-gray-800 mb-2">Candidate</div>
+            <div className="grid grid-cols-3 w-full">
+              <div className="">
+                <div className="text-xs text-gray-500">name</div>
+                <div className="font-semibold text-sm text-gray-900">
+                  {report.applicantName ?? report.ApplicantName}
                 </div>
               </div>
+              <div className="">
+                <div className="text-xs text-gray-500">email</div>
+                <div className="text-sm font-semibold text-gray-900">{report.email ?? report.Email}</div>
+              </div>
+              <div className="">
+                <div className="text-xs text-gray-500">phone</div>
+                <div className="text-sm font-semibold text-gray-900">{report.phoneNumber ?? report.PhoneNumber}</div>
+              </div>
             </div>
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {techStacks.map((t) => (
             <span
               key={t}
-              className="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700"
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${pillClass(t)}`}
             >
               {t}
             </span>
@@ -101,43 +115,27 @@ export default function HrTestReportView({ report, loading = false }) {
             const order = q.order ?? q.Order;
             const text = q.text ?? q.Text;
             const selectedId = q.selectedOptionId ?? q.SelectedOptionId;
-            const selectedOptionText = q.selectedOptionText ?? q.SelectedOptionText;
             const correctId = q.correctOptionId ?? q.CorrectOptionId;
-            const correctOptionText = q.correctOptionText ?? q.CorrectOptionText;
             const isCorrect = q.isCorrect ?? q.IsCorrect;
             const options = q.options ?? q.Options ?? [];
 
             return (
-              <div key={questionId} className="rounded-xl border p-4 mb-4 bg-white">
+              <div key={questionId} className="rounded-xl border border-gray-200 p-4 mb-4 bg-white shadow-md">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">Question {order}</h3>
 
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      isCorrect ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                    }`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${isCorrect ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                      }`}
                   >
                     {selectedId ? (isCorrect ? "correct" : "wrong") : "skipped"}
                   </span>
                 </div>
 
-                <p className="mt-2 text-gray-800">{text}</p>
+                <p className="mt-2 text-gray-800 font-medium">{text}</p>
 
-                <div className="mt-3 text-sm">
-                  <div>
-                    <span className="font-semibold text-gray-700">Selected: </span>
-                    <span className={selectedId ? "text-gray-900" : "text-gray-500"}>
-                      {selectedOptionText || "Not answered"}
-                    </span>
-                  </div>
 
-                  <div className="mt-1">
-                    <span className="font-semibold text-gray-700">Correct: </span>
-                    <span className="text-gray-900">{correctOptionText || "-"}</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 space-y-2">
+                <div className="mt-4 grid grid-cols-2 gap-4">
                   {options.map((opt) => {
                     const optId = opt.id ?? opt.Id;
                     const optText = opt.text ?? opt.Text;

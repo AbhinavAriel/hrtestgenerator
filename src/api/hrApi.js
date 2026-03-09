@@ -55,12 +55,10 @@ export const getHrTestById = async (testId) => {
   }
 };
 
-// ✅ ADD THIS (token validation)
 export const getHrTestByToken = async (token) => {
   try {
-    const safe = (token || "").trim();
-    if (!safe) throw Object.assign(new Error("Invalid test link"), { status: 400 });
-    return unwrap(await api.get(`/hr/tests/by-token/${safe}`));
+    if (!token) throw Object.assign(new Error("Missing test token"), { status: 400 });
+    return unwrap(await api.get(`/hr/tests/by-token/${token}`));
   } catch (e) {
     normalizeApiError(e);
   }
