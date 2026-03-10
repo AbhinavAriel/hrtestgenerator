@@ -14,7 +14,7 @@ export default function TestAlreadySubmitted() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[url(../../public/bg-2.webp)] bg-cover bg-center px-4">
-      <div className="w-full max-w-xl rounded-[28px] border border-white/30 bg-white/90 p-8 shadow-2xl backdrop-blur-xl">
+      <div className="w-full max-w-xl rounded-[28px] border border-white/30 bg-white/80 p-8 shadow-2xl backdrop-blur-xl">
         <div className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-amber-700">
           Assessment Status
         </div>

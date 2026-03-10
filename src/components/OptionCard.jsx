@@ -9,7 +9,6 @@ export default function OptionCard({
 
   return (
     <label className="relative block cursor-pointer group">
-      {/* Hidden Native Input */}
       <input
         type="radio"
         name={name}
@@ -18,7 +17,6 @@ export default function OptionCard({
         className="absolute opacity-0 pointer-events-none"
       />
 
-      {/* Premium Card */}
       <div
         className={`
         relative flex items-center justify-between py-3 px-5 rounded-xl
@@ -30,9 +28,7 @@ export default function OptionCard({
         }
       `}
       >
-        {/* Left Section */}
         <div className="flex items-center space-x-4">
-          {/* Letter Badge */}
           <div
             className={`
               flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold
@@ -47,7 +43,6 @@ export default function OptionCard({
             {letters[index]}
           </div>
 
-          {/* Option Text */}
           <span className="text-gray-800 font-medium text-sm">
             {option}
           </span>

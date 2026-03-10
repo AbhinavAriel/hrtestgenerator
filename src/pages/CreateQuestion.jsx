@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { createQuestion } from "../api/questionsApi";
 import { useHrData } from "../hooks/useHrData";
+import EditableOptionCard from "../components/EditableOptionCard";
 
 const defaultOptions = [
   { text: "", isCorrect: true },
@@ -134,7 +135,7 @@ export default function CreateQuestion() {
                 <select
                   value={form.techStackId}
                   onChange={(e) => setField("techStackId", e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-400"
+                  className="w-full rounded-xl border border-gray-300 cursor-pointer bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-400"
                   disabled={submitting}
                 >
                   <option value="">Select tech stack</option>
@@ -151,7 +152,7 @@ export default function CreateQuestion() {
                 <select
                   value={form.level}
                   onChange={(e) => setField("level", e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-400"
+                  className="w-full rounded-xl border border-gray-300 cursor-pointer bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-400"
                   disabled={submitting}
                 >
                   <option value="">Select level</option>
@@ -163,7 +164,7 @@ export default function CreateQuestion() {
                 </select>
               </div>
 
-             
+
             </div>
 
             <div>
@@ -171,29 +172,15 @@ export default function CreateQuestion() {
 
               <div className="space-y-3">
                 {form.options.map((opt, index) => (
-                  <div
+                  <EditableOptionCard
                     key={index}
-                    className="flex flex-col gap-3 rounded-xl border border-gray-200 p-4 sm:flex-row sm:items-center"
-                  >
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 sm:w-36">
-                      <input
-                        type="radio"
-                        name="correctOption"
-                        checked={opt.isCorrect}
-                        onChange={() => setCorrectOption(index)}
-                        disabled={submitting}
-                      />
-                      Correct Option
-                    </label>
-
-                    <input
-                      value={opt.text}
-                      onChange={(e) => setOptionText(index, e.target.value)}
-                      className="flex-1 rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-400"
-                      placeholder={`Option ${index + 1}`}
-                      disabled={submitting}
-                    />
-                  </div>
+                    index={index}
+                    value={opt.text}
+                    selected={opt.isCorrect}
+                    disabled={submitting}
+                    onSelect={() => setCorrectOption(index)}
+                    onChange={(val) => setOptionText(index, val)}
+                  />
                 ))}
               </div>
             </div>
