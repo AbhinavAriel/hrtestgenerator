@@ -52,7 +52,7 @@ export function useAssessmentData({
 
         if (!testId) {
           toast.error("Missing test id. Please open the link again.");
-          navigate("/", { replace: true });
+          navigate("/policy", { replace: true });
           return;
         }
 
@@ -105,7 +105,7 @@ export function useAssessmentData({
 
         if (!applicantId) {
           toast.error("Invalid test: applicant not found.");
-          navigate("/", { replace: true });
+          navigate("/policy", { replace: true });
           return;
         }
 
@@ -132,7 +132,7 @@ export function useAssessmentData({
 
         if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
           toast.error("Invalid test duration. Please contact HR/admin.");
-          navigate("/", { replace: true });
+          navigate("/policy", { replace: true });
           return;
         }
 
@@ -142,7 +142,7 @@ export function useAssessmentData({
 
         console.error("Failed to load assessment data", e);
         toast.error(e?.message || "Failed to load assessment data.");
-        navigate("/", { replace: true });
+        navigate("/policy", { replace: true });
 
       } finally {
 

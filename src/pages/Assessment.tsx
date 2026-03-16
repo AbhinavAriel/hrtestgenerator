@@ -13,20 +13,41 @@ import { useAssessmentSecurity } from "../hooks/useAssessmentSecurity";
 import type { Question, Option } from "../types/assessment";
 
 export default function Assessment() {
+
   const navigate = useNavigate();
   const { testId: routeTestId } = useParams<{ testId: string }>();
 
   const ctx = useTest();
-
   const { agreed, answers, setAnswers, user, setUser, testId: ctxTestId } = ctx;
 
-  const testId = (ctxTestId || routeTestId || "").trim();
+  const testId = routeTestId || ctxTestId || "";
 
+  if (!testId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white shadow-xl rounded-xl p-8">
+          Preparing assessment...
+        </div>
+      </div>
+    );
+  }
+
+  /*
+  ----------------------------------------
+  POLICY GUARD FIX
+  ----------------------------------------
+  */
   useEffect(() => {
-    if (!agreed) {
-      navigate("/policy", { replace: true });
-    }
-  }, [agreed, navigate]);
+
+  if (!user) return;
+
+  const storedAgreement = sessionStorage.getItem("policyAgreed");
+
+  if (!agreed && !storedAgreement) {
+    navigate("/policy", { replace: true });
+  }
+
+}, [user, agreed, navigate]);
 
   const { questions, loading, durationSeconds } = useAssessmentData({
     testId,
@@ -113,6 +134,7 @@ export default function Assessment() {
 
   return (
     <div className="min-h-screen flex bg-gray-100" {...containerProps}>
+
       <div className="flex-1 flex flex-col">
 
         <div className="bg-white px-8 py-4 sticky top-0 z-10">
@@ -123,11 +145,10 @@ export default function Assessment() {
             </div>
 
             <div
-              className={`font-semibold text-lg ${
-                (totalTime ?? 0) < 60
-                  ? "text-red-600 animate-pulse"
-                  : "text-blue-600"
-              }`}
+              className={`font-semibold text-lg ${(totalTime ?? 0) < 60
+                ? "text-red-600 animate-pulse"
+                : "text-blue-600"
+                }`}
             >
               ⏳ {formatTime(totalTime ?? 0)}
             </div>
@@ -167,11 +188,10 @@ export default function Assessment() {
                 <button
                   disabled={currentIndex === 0 || savingRef.current}
                   onClick={handlePrev}
-                  className={`px-6 py-3 text-sm rounded-xl font-medium transition ${
-                    currentIndex === 0 || savingRef.current
-                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      : "bg-white border border-gray-300 hover:bg-gray-50"
-                  }`}
+                  className={`px-6 py-3 text-sm rounded-xl font-medium transition ${currentIndex === 0 || savingRef.current
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "bg-white border border-gray-300 hover:bg-gray-50"
+                    }`}
                 >
                   Previous
                 </button>
@@ -179,17 +199,16 @@ export default function Assessment() {
                 <button
                   disabled={savingRef.current}
                   onClick={isLastQuestion ? handleSubmit : handleNext}
-                  className={`px-6 py-3 text-sm rounded-xl text-white font-medium transition ${
-                    savingRef.current
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
-                  }`}
+                  className={`px-6 py-3 text-sm rounded-xl text-white font-medium transition ${savingRef.current
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                    }`}
                 >
                   {savingRef.current
                     ? "Saving..."
                     : isLastQuestion
-                    ? "Submit Test"
-                    : "Next"}
+                      ? "Submit Test"
+                      : "Next"}
                 </button>
 
               </div>
@@ -201,6 +220,7 @@ export default function Assessment() {
         </div>
 
       </div>
+
     </div>
   );
 }

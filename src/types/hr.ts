@@ -65,3 +65,15 @@ export interface FormErrors {
   level?: string
   techStackIds?: string
 }
+
+export interface HrPagedData {
+  items: HrRow[]
+  totalCount: number
+  page: number
+}
+
+export interface HrTestsResponse {
+  isSuccess: boolean
+  message: string
+  data: HrPagedData
+}

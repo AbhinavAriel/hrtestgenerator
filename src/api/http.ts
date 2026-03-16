@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios"
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5143"
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5143/api"
 
 export interface ApiError {
   message: string

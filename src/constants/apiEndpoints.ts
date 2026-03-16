@@ -1,21 +1,21 @@
 export const API_ENDPOINTS = {
 
   HR: {
-    META: "/hr/meta",
-    TESTS: "/hr/tests",
-    TEST_BY_ID: (id: string) => `/hr/tests/${id}`,
-    TEST_BY_TOKEN: (token: string) => `/hr/tests/by-token/${token}`,
-    SUBMIT: (id: string) => `/hr/tests/${id}/submit`,
-    REPORT: (id: string) => `/hr/tests/${id}/report`
+    META: "api/Hr/meta",
+    TESTS: "api/Hr/tests",
+    TEST_BY_ID: (id: string) => `api/Hr/tests/${id}`,
+    TEST_BY_TOKEN: (token: string) => `api/Hr/tests/by-token/${token}`,
+    SUBMIT: (id: string) => `api/Hr/tests/${id}/submit`,
+    REPORT: (id: string) => `api/Hr/tests/${id}/report`
   },
 
   QUESTIONS: {
-    LIST: "/questions",
-    BY_ID: (id: string) => `/questions/${id}`
+    LIST: "api/Questions",
+    BY_ID: (id: string) => `api/Questions/${id}`
   },
 
    ANSWERS: {
-    SUBMIT: "/answers"
+    SUBMIT: "api/Answers"
   },
 
   APPLICANT: {

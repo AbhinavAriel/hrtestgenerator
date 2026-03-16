@@ -6,6 +6,7 @@ export interface ApplicantForm {
 
 export interface Applicant {
   id: string
+  testId?: string
   name: string
   email: string
   phone: string

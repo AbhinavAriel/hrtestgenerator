@@ -5,7 +5,6 @@ import {
   createHrTest,
   getHrMeta,
   getHrTests,
-  getHrTestById,
   updateHrTest,
   deleteHrTest,
 } from "../api/hrApi"
@@ -30,6 +29,14 @@ export function useHrData() {
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+
+  const [editRow, setEditRow] = useState<HrRow | null>(null)
+
+  const [openCreate, setOpenCreate] = useState(false)
+
+  const [openDelete, setOpenDelete] = useState(false)
+  const [deleteRow, setDeleteRow] = useState<HrRow | null>(null)
 
   const setField = (key: keyof HrForm, value: any) => {
     setForm((p) => ({ ...p, [key]: value }))
@@ -64,18 +71,20 @@ export function useHrData() {
         pageSize,
       })
 
-      const paged = readPaged(res)
+      const paged = readPaged(res?.data ?? res)
 
       if (paged) {
         setRows(paged.items.map(normalizeRow))
         setPage(paged.page)
         setTotalPages(paged.totalPages)
+        setTotalCount(paged.totalCount ?? 0)
         return
       }
 
       if (Array.isArray(res)) {
         setRows(res.map(normalizeRow))
         setTotalPages(1)
+        setTotalCount(res.length)
       }
 
     } catch (e: any) {
@@ -110,9 +119,19 @@ export function useHrData() {
         techStackIds: form.techStackIds,
       }
 
-      await createHrTest(payload)
+      if (editRow?.testId) {
 
-      toast.success("Test created successfully")
+        await updateHrTest(String(editRow.testId), payload)
+        toast.success("Test updated successfully")
+
+      } else {
+
+        await createHrTest(payload)
+        toast.success("Test created successfully")
+
+      }
+
+      setOpenCreate(false)
 
       await loadTests(page)
 
@@ -125,6 +144,82 @@ export function useHrData() {
       setSubmitting(false)
 
     }
+
+  }
+
+  const openCreateModal = () => {
+
+    setEditRow(null)
+    setForm(DEFAULT_FORM)
+    setErrors({})
+    setOpenCreate(true)
+
+  }
+
+  const closeCreateModal = () => {
+    setOpenCreate(false)
+  }
+
+  const handleEdit = (row: HrRow) => {
+
+    setEditRow(row)
+
+    const names = (row.applicantName || "").split(" ")
+
+    setForm({
+      ...DEFAULT_FORM,
+      firstName: names[0] || "",
+      lastName: names[1] || "",
+      email: row.email || "",
+      phoneNumber: row.phoneNumber || "",
+      totalQuestions: String(row.totalQuestions || ""),
+      durationMinutes: String(row.durationMinutes || ""),
+      level: row.level || "",
+      techStackIds: row.techStacks || [],
+    })
+
+    setOpenCreate(true)
+
+  }
+
+  const handleDeleteClick = (row: HrRow) => {
+    setDeleteRow(row)
+    setOpenDelete(true)
+  }
+
+  const confirmDelete = async () => {
+
+    if (!deleteRow) return
+
+    try {
+
+      setSubmitting(true)
+
+      await deleteHrTest(String(deleteRow.testId))
+
+      toast.success("Test deleted")
+
+      setOpenDelete(false)
+
+      await loadTests(page)
+
+    } catch (e: any) {
+
+      toast.error(e?.message || "Delete failed")
+
+    } finally {
+
+      setSubmitting(false)
+
+    }
+
+  }
+
+  const goToPage = (p: number) => {
+
+    if (p === page) return
+
+    loadTests(p)
 
   }
 
@@ -155,13 +250,17 @@ export function useHrData() {
 
   }, [loadTests])
 
+  /**
+   * FIXED: Normalize tech stack options
+   * MultiSelectDropdown expects { value, label }
+   */
   const techOptionsNormalized = useMemo(() => {
     return (meta.techStacks || [])
       .map((x: any) => ({
-        id: String(x.id ?? x.Id),
-        name: x.name ?? x.Name,
+        value: String(x.id ?? x.Id ?? ""),
+        label: String(x.name ?? x.Name ?? ""),
       }))
-      .filter((x) => x.id && x.name)
+      .filter((x) => x.value && x.label)
   }, [meta.techStacks])
 
   return {
@@ -169,12 +268,36 @@ export function useHrData() {
     setField,
     errors,
     submitting,
+
+    meta,
+
     rows,
     loadingTable,
-    techOptionsNormalized,
+
+    editRow,
+
+    openCreate,
+    openCreateModal,
+    closeCreateModal,
+
+    openDelete,
+    deleteRow,
+    setOpenDelete,
+
     handleCreate,
+    handleEdit,
+    handleDeleteClick,
+    confirmDelete,
+
+    techOptionsNormalized,
+
     page,
     totalPages,
+    totalCount,
+    pageSize,
+
+    goToPage,
+
     loadTests,
   }
 }

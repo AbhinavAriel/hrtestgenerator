@@ -30,6 +30,9 @@ export default function HrCreateEditModal({
   const removeSpaces = (value: string) =>
     value.replace(/\s+/g, "")
 
+  const inputStyle =
+    "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+
   return (
     <Modal
       open={open}
@@ -37,13 +40,13 @@ export default function HrCreateEditModal({
       onClose={onClose}
       disableClose={submitting}
     >
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmit} className="space-y-6">
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
           {/* Candidate section */}
           <div className="sm:col-span-2">
-            <p className="text-xs font-bold tracking-wide text-black">
+            <p className="text-xs font-bold tracking-wide text-gray-700">
               CANDIDATE DETAILS
             </p>
           </div>
@@ -54,7 +57,7 @@ export default function HrCreateEditModal({
               onChange={(e) =>
                 setField("firstName", removeSpaces(e.target.value))
               }
-              className="input"
+              className={inputStyle}
               placeholder="e.g. John"
               disabled={submitting}
             />
@@ -66,7 +69,7 @@ export default function HrCreateEditModal({
               onChange={(e) =>
                 setField("lastName", removeSpaces(e.target.value))
               }
-              className="input"
+              className={inputStyle}
               placeholder="e.g. Doe"
               disabled={submitting}
             />
@@ -77,7 +80,7 @@ export default function HrCreateEditModal({
               type="email"
               value={form.email}
               onChange={(e) => setField("email", e.target.value)}
-              className="input"
+              className={inputStyle}
               placeholder="name@company.com"
               disabled={submitting}
             />
@@ -90,7 +93,7 @@ export default function HrCreateEditModal({
                 setField("phoneNumber", onlyDigits(e.target.value))
               }
               inputMode="numeric"
-              className="input"
+              className={inputStyle}
               placeholder="e.g. 9876543210"
               maxLength={10}
               disabled={submitting}
@@ -98,8 +101,8 @@ export default function HrCreateEditModal({
           </Field>
 
           {/* Test section */}
-          <div className="sm:col-span-2 pt-4 border-dashed border-t border-gray-300">
-            <p className="text-xs font-bold tracking-wide text-black">
+          <div className="sm:col-span-2 pt-4 border-t border-dashed border-gray-300">
+            <p className="text-xs font-bold tracking-wide text-gray-700">
               TEST DETAILS
             </p>
           </div>
@@ -111,7 +114,7 @@ export default function HrCreateEditModal({
                 setField("totalQuestions", e.target.value)
               }
               inputMode="numeric"
-              className="input"
+              className={inputStyle}
               disabled={submitting}
             />
           </Field>
@@ -123,7 +126,7 @@ export default function HrCreateEditModal({
                 setField("durationMinutes", e.target.value)
               }
               inputMode="numeric"
-              className="input"
+              className={inputStyle}
               disabled={submitting}
             />
           </Field>
@@ -132,7 +135,7 @@ export default function HrCreateEditModal({
             <select
               value={form.level || ""}
               onChange={(e) => setField("level", e.target.value)}
-              className="input bg-white"
+              className={inputStyle}
               disabled={submitting}
             >
               <option value="">Select level</option>
@@ -165,13 +168,13 @@ export default function HrCreateEditModal({
         </div>
 
         {/* Buttons */}
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="flex justify-end gap-3 pt-4">
 
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="btn-secondary"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
           >
             Cancel
           </button>
@@ -179,7 +182,7 @@ export default function HrCreateEditModal({
           <button
             type="submit"
             disabled={submitting}
-            className="btn-primary"
+            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 disabled:opacity-60"
           >
             {submitting
               ? editRow
