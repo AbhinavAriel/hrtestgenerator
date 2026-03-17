@@ -48,16 +48,29 @@ export function useAssessmentData({
 
       try {
 
-        setLoading(true);
-
         if (!testId) {
-          toast.error("Missing test id. Please open the link again.");
-          navigate("/policy", { replace: true });
+          console.log("❌ Missing testId");
           return;
         }
 
+        if (!user?.id) {
+          console.log("⏳ Waiting for user...");
+          return;
+        }
+
+        setLoading(true);
+
+        console.log("API CALL:", {
+          testId,
+          applicantId: user.id
+        });
+
         const [questionData, testDetail] = await Promise.all([
-          getQuestions(testId),
+          // ✅ FIX: PASS applicantId
+          getQuestions({
+            testId,
+            applicantId: user.id,
+          }),
           getHrTestById(testId),
         ]);
 
@@ -103,16 +116,19 @@ export function useAssessmentData({
           (testDetail as any)?.applicantId ??
           (testDetail as any)?.ApplicantId;
 
-        if (!applicantId) {
+        const finalApplicantId = applicantId || user?.id;
+
+        if (!finalApplicantId) {
           toast.error("Invalid test: applicant not found.");
           navigate("/policy", { replace: true });
           return;
         }
 
-        if (!user?.id || String(user.id) !== String(applicantId)) {
+        // ✅ ENSURE CONTEXT MATCHES BACKEND
+        if (!user?.id || String(user.id) !== String(finalApplicantId)) {
           setUser?.({
-            id: applicantId,
-            applicantId,
+            id: finalApplicantId,
+            applicantId: finalApplicantId,
             ...(applicant || {}),
           });
         }
@@ -157,7 +173,7 @@ export function useAssessmentData({
       mounted = false;
     };
 
-  }, [testId, navigate, setUser]);
+  }, [testId, user?.id, navigate, setUser]); // ✅ FIXED DEPENDENCY
 
   return {
     questions,

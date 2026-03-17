@@ -5,5 +5,13 @@ export interface AdminLoginRequest {
 
 export interface AdminSession {
   token: string
-  adminId: string
+
+  user: {
+    id: string
+    fullName: string
+    email: string
+    roles: string[]
+  }
+
+  expiresAtUtc?: string
 }

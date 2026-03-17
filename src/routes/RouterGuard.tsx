@@ -13,9 +13,10 @@ const RouterGuard = () => {
         <Route
           path="/"
           element={
-            isAdminAuthenticated()
-              ? <Navigate to={ROUTES.ADMIN_DASHBOARD} replace />
-              : <Navigate to={ROUTES.ADMIN_LOGIN} replace />
+            <Route
+              path="/"
+              element={<Navigate to={ROUTES.ADMIN_LOGIN} replace />}
+            />
           }
         />
 

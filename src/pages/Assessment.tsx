@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { useTest } from "../context/TestContext";
 import OptionCard from "../components/OptionCard";
@@ -15,14 +15,16 @@ import type { Question, Option } from "../types/assessment";
 export default function Assessment() {
 
   const navigate = useNavigate();
-  const { testId: routeTestId } = useParams<{ testId: string }>();
 
   const ctx = useTest();
-  const { agreed, answers, setAnswers, user, setUser, testId: ctxTestId } = ctx;
+  const { agreed, answers, setAnswers, user, setUser, testId } = ctx;
 
-  const testId = routeTestId || ctxTestId || "";
-
-  if (!testId) {
+  /*
+  ----------------------------------------
+  WAIT FOR CONTEXT RESTORE
+  ----------------------------------------
+  */
+  if (!user || !testId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white shadow-xl rounded-xl p-8">
@@ -34,21 +36,40 @@ export default function Assessment() {
 
   /*
   ----------------------------------------
-  POLICY GUARD FIX
+  POLICY GUARD
   ----------------------------------------
   */
   useEffect(() => {
 
-  if (!user) return;
+    const storedAgreement = sessionStorage.getItem(`policyAgreed_${testId}`);
 
-  const storedAgreement = sessionStorage.getItem("policyAgreed");
+    if (storedAgreement && !agreed) {
+      ctx.setAgreed(true);
+      return;
+    }
 
-  if (!agreed && !storedAgreement) {
-    navigate("/policy", { replace: true });
-  }
+    if (!storedAgreement && !agreed) {
+      navigate("/policy", { replace: true });
+    }
 
-}, [user, agreed, navigate]);
+  }, [agreed, testId, navigate, ctx]);
 
+  /*
+  ----------------------------------------
+  SAFETY REDIRECT
+  ----------------------------------------
+  */
+  useEffect(() => {
+    if (!testId) {
+      navigate("/", { replace: true });
+    }
+  }, [testId, navigate]);
+
+  /*
+  ----------------------------------------
+  FETCH DATA (NOW SAFE)
+  ----------------------------------------
+  */
   const { questions, loading, durationSeconds } = useAssessmentData({
     testId,
     user,
@@ -105,6 +126,11 @@ export default function Assessment() {
     detectTabSwitch: true,
   });
 
+  /*
+  ----------------------------------------
+  LOADING STATE
+  ----------------------------------------
+  */
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -129,7 +155,11 @@ export default function Assessment() {
 
   if (!currentQuestionTyped) return null;
 
-  const selected = answers?.[currentQuestionTyped.id] ?? null;
+  const selected =
+    currentQuestion?.id && answers
+      ? answers[currentQuestion.id]
+      : null;
+
   const isLastQuestion = currentIndex === questions.length - 1;
 
   return (
@@ -188,10 +218,11 @@ export default function Assessment() {
                 <button
                   disabled={currentIndex === 0 || savingRef.current}
                   onClick={handlePrev}
-                  className={`px-6 py-3 text-sm rounded-xl font-medium transition ${currentIndex === 0 || savingRef.current
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-white border border-gray-300 hover:bg-gray-50"
-                    }`}
+                  className={`px-6 py-3 text-sm rounded-xl font-medium transition ${
+                    currentIndex === 0 || savingRef.current
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-white border border-gray-300 hover:bg-gray-50"
+                  }`}
                 >
                   Previous
                 </button>
@@ -199,10 +230,11 @@ export default function Assessment() {
                 <button
                   disabled={savingRef.current}
                   onClick={isLastQuestion ? handleSubmit : handleNext}
-                  className={`px-6 py-3 text-sm rounded-xl text-white font-medium transition ${savingRef.current
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
-                    }`}
+                  className={`px-6 py-3 text-sm rounded-xl text-white font-medium transition ${
+                    savingRef.current
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  }`}
                 >
                   {savingRef.current
                     ? "Saving..."

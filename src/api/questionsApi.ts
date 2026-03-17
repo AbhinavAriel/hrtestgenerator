@@ -2,13 +2,35 @@ import { request } from "./http"
 import { unwrap, normalizeApiError } from "./apiHelper"
 import { API_ENDPOINTS } from "../constants/apiEndpoints"
 
-export const getQuestions = async (testId?: string): Promise<any> => {
+interface GetQuestionsParams {
+  testId?: string
+  applicantId?: string
+}
+
+export const getQuestions = async (
+  params?: string | GetQuestionsParams
+): Promise<any> => {
 
   try {
 
-    const url = testId
-      ? `${API_ENDPOINTS.QUESTIONS.LIST}?testId=${testId}`
-      : API_ENDPOINTS.QUESTIONS.LIST
+    // ✅ BACKWARD COMPATIBILITY
+    const testId =
+      typeof params === "string" ? params : params?.testId
+
+    const applicantId =
+      typeof params === "string" ? undefined : params?.applicantId
+
+    // ✅ BUILD QUERY PARAMS SAFELY
+    let url = API_ENDPOINTS.QUESTIONS.LIST
+
+    const queryParams: string[] = []
+
+    if (testId) queryParams.push(`testId=${testId}`)
+    if (applicantId) queryParams.push(`applicantId=${applicantId}`)
+
+    if (queryParams.length > 0) {
+      url += `?${queryParams.join("&")}`
+    }
 
     const res = await request<any>(url)
 
@@ -37,7 +59,7 @@ export const createQuestion = async (payload: any): Promise<any> => {
 
   } catch (e) {
 
-    normalizeApiError(e)
+    throw normalizeApiError(e)
 
   }
 }

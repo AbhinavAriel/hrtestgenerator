@@ -29,6 +29,25 @@ export default function PolicyAgreement() {
   const [checked, setChecked] = useState<boolean>(false)
   const [checking, setChecking] = useState<boolean>(true)
 
+  /*
+  ----------------------------------------
+  RESTORE AGREEMENT (MUST BE ABOVE RETURN)
+  ----------------------------------------
+  */
+  useEffect(() => {
+    if (!testId) return
+
+    const stored = sessionStorage.getItem(`policyAgreed_${testId}`)
+    if (stored) {
+      setAgreed(true)
+    }
+  }, [testId, setAgreed])
+
+  /*
+  ----------------------------------------
+  VALIDATE TEST
+  ----------------------------------------
+  */
   useEffect(() => {
 
     let mounted = true
@@ -79,7 +98,7 @@ export default function PolicyAgreement() {
         if (!mounted) return
 
         if (isSubmitted) {
-          navigate(`/test/${testId}/already-submitted`, { replace: true })
+          navigate("/test-submitted", { replace: true })
           return
         }
 
@@ -103,26 +122,36 @@ export default function PolicyAgreement() {
 
   }, [user, testId, navigate])
 
+  /*
+  ----------------------------------------
+  CONTINUE HANDLER
+  ----------------------------------------
+  */
+  const handleContinue = () => {
+
+    if (!checked) return
+
+    if (!testId) {
+      toast.error("Missing test info. Please open the test link again.")
+      navigate("/", { replace: true })
+      return
+    }
+
+    setAgreed(true)
+
+    sessionStorage.setItem(`policyAgreed_${testId}`, "true")
+
+    navigate(`/assessment/${testId}`, { replace: true })
+  }
+
+  /*
+  ----------------------------------------
+  LOADER (AFTER ALL HOOKS)
+  ----------------------------------------
+  */
   if (checking) {
     return <FullPageLoader message="Validating test status..." />
   }
-
-  const handleContinue = () => {
-
-  if (!checked) return
-
-  if (!testId) {
-    toast.error("Missing test info. Please open the test link again.")
-    navigate("/", { replace: true })
-    return
-  }
-
-  setAgreed(true)
-
-  sessionStorage.setItem("policyAgreed", "true") 
-
-  navigate(`/assessment/${testId}`, { replace: true })
-}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[url(../../bg-1.jpg)] bg-cover bg1">
