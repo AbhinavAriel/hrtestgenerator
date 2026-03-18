@@ -15,24 +15,9 @@ import type { Question, Option } from "../types/assessment";
 export default function Assessment() {
 
   const navigate = useNavigate();
-
   const ctx = useTest();
-  const { agreed, answers, setAnswers, user, setUser, testId } = ctx;
 
-  /*
-  ----------------------------------------
-  WAIT FOR CONTEXT RESTORE
-  ----------------------------------------
-  */
-  if (!user || !testId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white shadow-xl rounded-xl p-8">
-          Preparing assessment...
-        </div>
-      </div>
-    );
-  }
+  const { agreed, answers, setAnswers, user, setUser, testId } = ctx;
 
   /*
   ----------------------------------------
@@ -40,44 +25,27 @@ export default function Assessment() {
   ----------------------------------------
   */
   useEffect(() => {
-
-    const storedAgreement = sessionStorage.getItem(`policyAgreed_${testId}`);
-
-    if (storedAgreement && !agreed) {
-      ctx.setAgreed(true);
-      return;
-    }
-
-    if (!storedAgreement && !agreed) {
+    if (!agreed) {
       navigate("/policy", { replace: true });
     }
-
-  }, [agreed, testId, navigate, ctx]);
-
-  /*
-  ----------------------------------------
-  SAFETY REDIRECT
-  ----------------------------------------
-  */
-  useEffect(() => {
-    if (!testId) {
-      navigate("/", { replace: true });
-    }
-  }, [testId, navigate]);
+  }, [agreed, navigate]);
 
   /*
   ----------------------------------------
-  FETCH DATA (NOW SAFE)
+  FETCH DATA
   ----------------------------------------
   */
   const { questions, loading, durationSeconds } = useAssessmentData({
-    testId,
+    testId: (agreed && testId) ? testId : "",
     user,
     setUser,
   });
 
-  const fallbackElapsed = () => 0;
-
+  /*
+  ----------------------------------------
+  ACTIONS
+  ----------------------------------------
+  */
   const {
     currentIndex,
     currentQuestion,
@@ -90,16 +58,27 @@ export default function Assessment() {
     handleNext,
     handleSubmit,
   } = useAssessmentActions({
-    testId,
+    testId: testId || "",
     questions,
     answers,
     setAnswers,
     user,
     ctx,
-    calcElapsedSeconds: fallbackElapsed,
+    // calcElapsedSeconds wired below via the ref returned from the timer
+    calcElapsedSeconds: undefined,
   });
 
-  const { totalTime } = useAssessmentTimer({
+  /*
+  ----------------------------------------
+  TIMER — after actions so submittedRef
+  and handleSubmit are available.
+  calcElapsedSeconds is returned as a
+  stable ref-based function and passed
+  back into actions via the actions hook's
+  internal ref (see useAssessmentActions).
+  ----------------------------------------
+  */
+  const { totalTime, calcElapsedSeconds } = useAssessmentTimer({
     startSeconds: durationSeconds,
     loading,
     hasQuestions: questions.length > 0,
@@ -128,9 +107,19 @@ export default function Assessment() {
 
   /*
   ----------------------------------------
-  LOADING STATE
+  SAFE LOADING STATES (AFTER HOOKS)
   ----------------------------------------
   */
+  if (!user || !testId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white shadow-xl rounded-xl p-8">
+          Preparing assessment...
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -151,20 +140,13 @@ export default function Assessment() {
     );
   }
 
-  const currentQuestionTyped = currentQuestion as Question | null;
+  const currentQuestionTyped = currentQuestion as Question;
 
-  if (!currentQuestionTyped) return null;
-
-  const selected =
-    currentQuestion?.id && answers
-      ? answers[currentQuestion.id]
-      : null;
-
+  const selected = answers?.[currentQuestionTyped.id] ?? null;
   const isLastQuestion = currentIndex === questions.length - 1;
 
   return (
     <div className="min-h-screen flex bg-gray-100" {...containerProps}>
-
       <div className="flex-1 flex flex-col">
 
         <div className="bg-white px-8 py-4 sticky top-0 z-10">
@@ -175,10 +157,11 @@ export default function Assessment() {
             </div>
 
             <div
-              className={`font-semibold text-lg ${(totalTime ?? 0) < 60
-                ? "text-red-600 animate-pulse"
-                : "text-blue-600"
-                }`}
+              className={`font-semibold text-lg ${
+                (totalTime ?? 0) < 60
+                  ? "text-red-600 animate-pulse"
+                  : "text-blue-600"
+              }`}
             >
               ⏳ {formatTime(totalTime ?? 0)}
             </div>
@@ -195,7 +178,7 @@ export default function Assessment() {
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
-              {(currentQuestionTyped.options || []).map((opt: Option, index: number) => (
+              {currentQuestionTyped.options.map((opt: Option, index: number) => (
                 <OptionCard
                   key={opt.id}
                   name={`question-${currentQuestionTyped.id}`}
@@ -239,8 +222,8 @@ export default function Assessment() {
                   {savingRef.current
                     ? "Saving..."
                     : isLastQuestion
-                      ? "Submit Test"
-                      : "Next"}
+                    ? "Submit Test"
+                    : "Next"}
                 </button>
 
               </div>
@@ -252,7 +235,6 @@ export default function Assessment() {
         </div>
 
       </div>
-
     </div>
   );
 }

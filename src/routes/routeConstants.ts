@@ -9,6 +9,6 @@ export const ROUTES = {
   CREATE_QUESTION: "/admin/questions/create",
   TEST_PREVIEW: "/hr/tests/:testId/preview",
 
-  ASSESSMENT: "/assessment/:testId", 
+  ASSESSMENT: "/assessment", 
   RESULT: "/result",
 } as const;

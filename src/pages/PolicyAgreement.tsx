@@ -31,20 +31,6 @@ export default function PolicyAgreement() {
 
   /*
   ----------------------------------------
-  RESTORE AGREEMENT (MUST BE ABOVE RETURN)
-  ----------------------------------------
-  */
-  useEffect(() => {
-    if (!testId) return
-
-    const stored = sessionStorage.getItem(`policyAgreed_${testId}`)
-    if (stored) {
-      setAgreed(true)
-    }
-  }, [testId, setAgreed])
-
-  /*
-  ----------------------------------------
   VALIDATE TEST
   ----------------------------------------
   */
@@ -120,7 +106,7 @@ export default function PolicyAgreement() {
       mounted = false
     }
 
-  }, [user, testId, navigate])
+  }, [user?.id, testId, navigate])
 
   /*
   ----------------------------------------
@@ -141,7 +127,7 @@ export default function PolicyAgreement() {
 
     sessionStorage.setItem(`policyAgreed_${testId}`, "true")
 
-    navigate(`/assessment/${testId}`, { replace: true })
+    navigate("/assessment", { replace: true })
   }
 
   /*

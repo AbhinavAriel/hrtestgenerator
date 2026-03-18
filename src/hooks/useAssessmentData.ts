@@ -46,75 +46,70 @@ export function useAssessmentData({
 
     const load = async () => {
 
+      // Guard: do nothing if testId is not ready
+      if (!testId) return;
+
+      // Guard: do nothing until user is in context
+      if (!user?.id) return;
+
       try {
-
-        if (!testId) {
-          console.log("❌ Missing testId");
-          return;
-        }
-
-        if (!user?.id) {
-          console.log("⏳ Waiting for user...");
-          return;
-        }
 
         setLoading(true);
 
-        console.log("API CALL:", {
-          testId,
-          applicantId: user.id
-        });
-
-        const [questionData, testDetail] = await Promise.all([
-          // ✅ FIX: PASS applicantId
-          getQuestions({
-            testId,
-            applicantId: user.id,
-          }),
+        const [rawQuestions, rawTestDetail] = await Promise.all([
+          getQuestions(testId),
           getHrTestById(testId),
         ]);
 
         if (!mounted) return;
 
+        /*
+        ─────────────────────────────────────────
+        UNWRAP API RESPONSE ENVELOPE
+        Both APIs return: { isSuccess, data: {...}, errors, message }
+        We must read .data before accessing test/applicant/questions
+        ─────────────────────────────────────────
+        */
+        const r = (rawTestDetail as any);
+        const testDetail = r?.data ?? r; // unwrap { isSuccess, data: {...} }
+
         const test =
-          (testDetail as any)?.test ??
-          (testDetail as any)?.Test ??
+          testDetail?.test ??
+          testDetail?.Test ??
           null;
 
+        // ── Submitted check ──────────────────────────────────────
         const submittedAt =
           test?.submittedAtUtc ??
           test?.SubmittedAtUtc ??
-          (testDetail as any)?.submittedAtUtc ??
-          (testDetail as any)?.SubmittedAtUtc ??
+          testDetail?.submittedAtUtc ??
+          testDetail?.SubmittedAtUtc ??
           null;
 
         const status = (
           test?.status ??
           test?.Status ??
-          (testDetail as any)?.status ??
-          (testDetail as any)?.Status ??
+          testDetail?.status ??
+          testDetail?.Status ??
           ""
-        ).toString();
+        ).toString().toLowerCase();
 
-        const isSubmitted =
-          Boolean(submittedAt) ||
-          status.toLowerCase() === "submitted";
-
-        if (isSubmitted) {
+        if (Boolean(submittedAt) || status === "submitted") {
           navigate(`/test/${testId}/already-submitted`, { replace: true });
           return;
         }
 
+        // ── Applicant sync ───────────────────────────────────────
         const applicant =
-          (testDetail as any)?.applicant ??
-          (testDetail as any)?.Applicant ??
+          testDetail?.applicant ??
+          testDetail?.Applicant ??
           null;
 
         const applicantId =
           applicant?.id ??
           applicant?.Id ??
-          (testDetail as any)?.applicantId ??
-          (testDetail as any)?.ApplicantId;
+          testDetail?.applicantId ??
+          testDetail?.ApplicantId;
 
         const finalApplicantId = applicantId || user?.id;
 
@@ -124,7 +119,6 @@ export function useAssessmentData({
           return;
         }
 
-        // ✅ ENSURE CONTEXT MATCHES BACKEND
         if (!user?.id || String(user.id) !== String(finalApplicantId)) {
           setUser?.({
             id: finalApplicantId,
@@ -133,17 +127,25 @@ export function useAssessmentData({
           });
         }
 
-        const list = Array.isArray(questionData) ? questionData : [];
+        // ── Questions ────────────────────────────────────────────
+        // Questions API also returns { isSuccess, data: [...] }
+        const qr = (rawQuestions as any);
+        const questionList = qr?.data ?? qr;
+
+        const list: Question[] = Array.isArray(questionList)
+          ? questionList
+          : [];
 
         const sorted = [...list].sort(
-          (a: Question, b: Question) =>
-            (a.order || 0) - (b.order || 0)
+          (a, b) => (a.order || 0) - (b.order || 0)
         );
 
         setQuestions(sorted);
 
+        // ── Duration ─────────────────────────────────────────────
         const durationMinutes = Number(
-          test?.durationMinutes ?? test?.DurationMinutes
+          test?.durationMinutes ??
+          test?.DurationMinutes
         );
 
         if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
@@ -156,6 +158,7 @@ export function useAssessmentData({
 
       } catch (e: any) {
 
+        if (!mounted) return;
         console.error("Failed to load assessment data", e);
         toast.error(e?.message || "Failed to load assessment data.");
         navigate("/policy", { replace: true });
@@ -173,11 +176,7 @@ export function useAssessmentData({
       mounted = false;
     };
 
-  }, [testId, user?.id, navigate, setUser]); // ✅ FIXED DEPENDENCY
+  }, [testId, user?.id]);
 
-  return {
-    questions,
-    loading,
-    durationSeconds,
-  };
+  return { questions, loading, durationSeconds };
 }

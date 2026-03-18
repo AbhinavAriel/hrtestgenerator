@@ -10,15 +10,7 @@ const RouterGuard = () => {
     <Suspense fallback={<div>Loading...</div>}>
       <Routes>
 
-        <Route
-          path="/"
-          element={
-            <Route
-              path="/"
-              element={<Navigate to={ROUTES.ADMIN_LOGIN} replace />}
-            />
-          }
-        />
+        <Route path="/" element={<Navigate to={ROUTES.ADMIN_LOGIN} replace />} />
 
         {routesConfig.public.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />

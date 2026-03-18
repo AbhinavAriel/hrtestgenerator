@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useTest } from "../context/TestContext";
 
 export default function Result() {
+
   const navigate = useNavigate();
   const { setAgreed, setAnswers, setIsSubmitted } = useTest();
 
   useEffect(() => {
+
+    // Clear assessment state so candidate cannot go back
     setAgreed(false);
     setAnswers({});
     setIsSubmitted(true);
@@ -15,12 +18,14 @@ export default function Result() {
       navigate("/test-submitted", { replace: true });
     };
 
+    // Push an extra history entry so back button is blocked
     window.history.pushState(null, "", window.location.href);
     window.addEventListener("popstate", handlePopState);
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
+
   }, [navigate, setAgreed, setAnswers, setIsSubmitted]);
 
   return (

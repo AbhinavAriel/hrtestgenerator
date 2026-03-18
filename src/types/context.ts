@@ -8,8 +8,11 @@ export interface TestContextType {
   setAnswers: React.Dispatch<React.SetStateAction<AnswerMap>>;
 
   user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  // setUser: React.Dispatch<React.SetStateAction<User | null>>;
+
+  setUser: (user: User | null) => void;         // was Dispatch
+  setTestId: (id: string | null) => void;      
 
   testId: string | null;
-  setTestId: (id: string) => void;
+  // setTestId: (id: string) => void;
 }

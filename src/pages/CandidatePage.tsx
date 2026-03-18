@@ -152,7 +152,7 @@ export default function CandidatePage() {
       mounted = false
     }
 
-  }, [safeToken, navigate, setUser, setTestId])
+  }, [safeToken, navigate])
 
   const handleStart = (e: React.FormEvent) => {
 
@@ -161,6 +161,7 @@ export default function CandidatePage() {
     if (checking || apiError) return
 
     sessionStorage.removeItem(`policyAgreed_${form.testId}`);
+    sessionStorage.removeItem("agreed")
 
     if (!form.email || form.phone.length !== 10) {
       toast.error("Candidate details incomplete. Contact admin.")

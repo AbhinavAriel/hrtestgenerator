@@ -25,8 +25,8 @@ interface UseAssessmentActionsProps {
   answers: AnswerMap;
   setAnswers: React.Dispatch<React.SetStateAction<AnswerMap>>;
   user: User | null;
-  ctx: any; // context type can be improved later
-  calcElapsedSeconds?: () => number;
+  ctx: any;
+  calcElapsedSeconds?: (() => number) | undefined; // optional — wired from useAssessmentTimer
 }
 
 interface UseAssessmentActionsReturn {
@@ -62,6 +62,12 @@ export function useAssessmentActions({
 
   const answersRef = useRef<AnswerMap>(answers);
 
+  // Keep a stable ref to calcElapsedSeconds so closures always get latest version
+  const calcElapsedRef = useRef<(() => number) | undefined>(calcElapsedSeconds);
+  useEffect(() => {
+    calcElapsedRef.current = calcElapsedSeconds;
+  }, [calcElapsedSeconds]);
+
   useEffect(() => {
     answersRef.current = answers;
   }, [answers]);
@@ -75,7 +81,12 @@ export function useAssessmentActions({
   const getApplicantId = (): string | undefined =>
     user?.applicantId || user?.id || user?.userId;
 
-  const handleSelect = (optionId: string) => {
+  const getElapsed = (): number =>
+    typeof calcElapsedRef.current === "function"
+      ? calcElapsedRef.current()
+      : 0;
+
+  const handleSelect = (optionId: string): void => {
     if (!currentQuestion) return;
 
     setAnswers((prev) => ({
@@ -102,8 +113,7 @@ export function useAssessmentActions({
       return false;
     }
 
-    const selectedOptionId =
-      answersRef.current?.[currentQuestion.id] ?? null;
+    const selectedOptionId = answersRef.current?.[currentQuestion.id] ?? null;
 
     if (!selectedOptionId) {
       return allowSkip ? true : false;
@@ -118,10 +128,7 @@ export function useAssessmentActions({
         applicantId,
         questionId: currentQuestion.id,
         selectedOptionId,
-        elapsedSeconds:
-          typeof calcElapsedSeconds === "function"
-            ? calcElapsedSeconds()
-            : 0,
+        elapsedSeconds: getElapsed(),
       });
 
       return true;
@@ -148,44 +155,24 @@ export function useAssessmentActions({
       return false;
     }
 
-    const elapsedSeconds =
-      typeof calcElapsedSeconds === "function"
-        ? calcElapsedSeconds()
-        : 0;
+    const elapsedSeconds = getElapsed();
 
     for (const q of questions || []) {
 
-      const selectedOptionId =
-        answersRef.current?.[q.id] ?? null;
+      const selectedOptionId = answersRef.current?.[q.id] ?? null;
 
       try {
-
-        if (selectedOptionId) {
-          await submitAnswer({
-            testId,
-            applicantId,
-            questionId: q.id,
-            selectedOptionId,
-            elapsedSeconds,
-          });
-
-          continue;
-        }
-
         await submitAnswer({
           testId,
           applicantId,
           questionId: q.id,
-          selectedOptionId: null,
+          selectedOptionId,
           elapsedSeconds,
         });
-
       } catch (e: any) {
-
         console.error("Submit answer failed for question:", q?.id, e);
         toast.error(e?.message || "Failed to submit answers.");
         return false;
-
       }
     }
 
@@ -220,11 +207,9 @@ export function useAssessmentActions({
       navigate("/result", { replace: true, state: { testId } });
 
     } catch (e: any) {
-
       console.error(e);
       toast.error(e?.message || "Failed to submit test.");
       submittedRef.current = false;
-
     }
   };
 
@@ -237,7 +222,6 @@ export function useAssessmentActions({
     if (currentIndex > 0) {
       setCurrentIndex((i) => i - 1);
     }
-
   };
 
   const handleNext = async (): Promise<void> => {
@@ -253,10 +237,9 @@ export function useAssessmentActions({
     } else {
       handleSubmit();
     }
-
   };
 
-  const incrementTabWarning = () =>
+  const incrementTabWarning = (): void =>
     setTabWarnings((w) => w + 1);
 
   return {

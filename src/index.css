@@ -33,3 +33,6 @@ body {
   background: #bad8ff;
   border-radius: 10px;
 }
+button {
+  cursor: pointer;
+}
