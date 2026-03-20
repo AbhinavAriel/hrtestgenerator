@@ -4,7 +4,7 @@ import { useHrData } from "../hooks/useHrData"
 import { useHrTabs } from "../hooks/useHrTabs"
 import HrCreateEditModal from "../components/HrCreateEditModal"
 import HrDeleteModal from "../components/HrDeleteModal"
-import HrTable from "../components/HrTable"
+import HrTable from "../components/hrTable/HrTable"
 import HrTestReportView from "../components/HrTestReportView"
 import { logoutAdmin } from "../lib/adminAuth"
 

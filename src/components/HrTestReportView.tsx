@@ -16,6 +16,8 @@ export default function HrTestReportView({
 
   const questions = report.questions ?? report.Questions ?? []
   const techStacks = report.techStacks ?? report.TechStacks ?? []
+  const scorePercent = report.scorePercentage ?? report.ScorePercentage ?? 0
+  const isPassed = report.isPassed ?? report.IsPassed ?? false
 
   return (
     <div className="rounded-b-2xl rounded-tr-2xl border border-t-0 border-gray-200 bg-white p-6 shadow-2xl">
@@ -25,21 +27,25 @@ export default function HrTestReportView({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Test Preview</h1>
-
             <p className="text-sm text-gray-600">
-              TestId:
-              <span className="font-mono">
-                {report.testId ?? report.TestId}
-              </span>
+              TestId: <span className="font-mono">{report.testId ?? report.TestId}</span>
             </p>
           </div>
 
-          <span className="inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold capitalize">
-            {report.status ?? report.Status ?? "-"}
-          </span>
+          <div className="flex gap-2 items-center">
+            <span className="inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold capitalize">
+              {report.status ?? report.Status ?? "-"}
+            </span>
+            <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${isPassed ? "bg-green-100 text-green-700 border border-green-200" : "bg-red-100 text-red-700 border border-red-200"
+              }`}>
+              {isPassed ? "Passed" : "Failed"}
+            </span>
+
+          </div>
         </div>
 
-        <div className="grid grid-cols-4 mt-4 gap-3">
+        {/* Stats — 6 cards */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 mt-4 gap-3">
 
           <StatCard
             label="Total Questions"
@@ -68,37 +74,20 @@ export default function HrTestReportView({
         </div>
 
         <div className="mt-5">
-
           <div className="text-sm text-gray-800 mb-2">Candidate</div>
-
-          <div className="grid grid-cols-3 w-full">
-
-            <CandidateField
-              label="name"
-              value={report.applicantName ?? report.ApplicantName}
-            />
-
-            <CandidateField
-              label="email"
-              value={report.email ?? report.Email}
-            />
-
-            <CandidateField
-              label="phone"
-              value={report.phoneNumber ?? report.PhoneNumber}
-            />
-
+          <div className="grid grid-cols-4 w-full">
+            <CandidateField label="name" value={report.applicantName ?? report.ApplicantName} />
+            <CandidateField label="email" value={report.email ?? report.Email} />
+            <CandidateField label="phone" value={report.phoneNumber ?? report.PhoneNumber} />
+            <CandidateField label="score" value={report.scorePercentage ?? report.ScorePercentage} />
           </div>
-
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {techStacks.map((t) => (
             <span
               key={t}
-              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${pillClass(
-                t
-              )}`}
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${pillClass(t)}`}
             >
               {t}
             </span>
@@ -107,15 +96,14 @@ export default function HrTestReportView({
 
       </div>
 
+      {/* ── Questions ── */}
       <div className="mt-6 space-y-4">
-
         {questions.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600">
             No questions found for this test.
           </div>
         ) : (
           questions.map((q) => {
-
             const questionId = q.questionId ?? q.QuestionId
             const order = q.order ?? q.Order
             const text = q.text ?? q.Text
@@ -125,40 +113,22 @@ export default function HrTestReportView({
             const options = q.options ?? q.Options ?? []
 
             return (
-              <div
-                key={questionId}
-                className="rounded-xl border border-gray-200 p-4 bg-white shadow-md"
-              >
+              <div key={questionId} className="rounded-xl border border-gray-200 p-4 bg-white shadow-md">
 
                 <div className="flex items-center justify-between">
-
-                  <h3 className="font-semibold">
-                    Question {order}
-                  </h3>
-
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      isCorrect
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
+                  <h3 className="font-semibold">Question {order}</h3>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${isCorrect ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                    }`}>
                     {selectedId ? (isCorrect ? "correct" : "wrong") : "skipped"}
                   </span>
-
                 </div>
 
-                <p className="mt-2 text-gray-800 font-medium">
-                  {text}
-                </p>
+                <p className="mt-2 text-gray-800 font-medium">{text}</p>
 
-                <div className="mt-4 grid grid-cols-2 gap-4">
-
+                <div className="mt-4 grid lg:grid-cols-2 gap-4">
                   {options.map((opt) => {
-
                     const optId = opt.id ?? opt.Id
                     const optText = opt.text ?? opt.Text
-
                     const isSelected = selectedId && optId === selectedId
                     const isCorrectOpt = correctId && optId === correctId
 
@@ -169,62 +139,48 @@ export default function HrTestReportView({
                           ${isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"}
                           ${isCorrectOpt ? "border-green-500" : ""}`}
                       >
-
-                        <span className="text-gray-800">
-                          {optText}
-                        </span>
-
+                        <span className="text-gray-800">{optText}</span>
                         <div className="flex gap-2">
-
                           {isSelected && (
                             <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-700">
                               Selected
                             </span>
                           )}
-
                           {isCorrectOpt && (
                             <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">
                               Correct
                             </span>
                           )}
-
                         </div>
-
                       </div>
                     )
                   })}
-
                 </div>
 
               </div>
             )
           })
         )}
-
       </div>
 
     </div>
   )
 }
 
+// ─── Shared sub-components ───────────────────────────────────────────────────
 
-function StatCard({
-  label,
-  value,
-  color,
-}: {
+function StatCard({ label, value, color }: {
   label: string
   value: string | number
-  color: "yellow" | "blue" | "red" | "green"
+  color: "yellow" | "blue" | "red" | "green" | "purple"
 }) {
-
   const colors: Record<string, string> = {
     yellow: "border-yellow-100 bg-yellow-50",
-    blue: "border-blue-100 bg-blue-50",
-    red: "border-red-100 bg-red-50",
-    green: "border-green-100 bg-green-50",
+    blue: "border-blue-100   bg-blue-50",
+    red: "border-red-100    bg-red-50",
+    green: "border-green-100  bg-green-50",
+    purple: "border-purple-100 bg-purple-50",
   }
-
   return (
     <div className={`rounded-xl border p-3 shadow-md ${colors[color]}`}>
       <div className="text-xs text-gray-500">{label}</div>
@@ -233,19 +189,12 @@ function StatCard({
   )
 }
 
-function CandidateField({
-  label,
-  value,
-}: {
-  label: string
-  value?: string
-}) {
+
+function CandidateField({ label, value }: { label: string; value?: string| number }) {
   return (
     <div>
       <div className="text-xs text-gray-500">{label}</div>
-      <div className="text-sm font-semibold text-gray-900">
-        {value}
-      </div>
+      <div className="text-sm font-semibold text-gray-900">{value ?? "-"}</div>
     </div>
   )
 }

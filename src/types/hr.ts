@@ -40,6 +40,8 @@ export interface HrRow {
   submittedAtUtc?: string | null
   testToken?: string | null
   expiresAtUtc?: string | null
+  scorePercentage?: number  
+  isPassed?: boolean  
 }
 
 export interface HrCreateEditModalProps {

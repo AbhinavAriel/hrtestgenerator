@@ -166,16 +166,26 @@ export function useHrData() {
 
     const names = (row.applicantName || "").split(" ")
 
+    // ✅ FIX: map tech stack names → GUIDs using techOptionsNormalized
+    const resolvedTechIds = (row.techStacks || [])
+      .map((name) => {
+        const match = techOptionsNormalized.find(
+          (o) => o.label.toLowerCase() === String(name).toLowerCase()
+        )
+        return match?.value ?? ""
+      })
+      .filter(Boolean)
+
     setForm({
       ...DEFAULT_FORM,
       firstName: names[0] || "",
-      lastName: names[1] || "",
+      lastName: names.slice(1).join(" ") || "",   
       email: row.email || "",
       phoneNumber: row.phoneNumber || "",
       totalQuestions: String(row.totalQuestions || ""),
       durationMinutes: String(row.durationMinutes || ""),
       level: row.level || "",
-      techStackIds: row.techStacks || [],
+      techStackIds: resolvedTechIds,           
     })
 
     setOpenCreate(true)

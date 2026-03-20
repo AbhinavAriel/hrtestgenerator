@@ -15,6 +15,8 @@ export interface RowData {
 
   answeredCount?: number;
   correctCount?: number;
+  scorePercentage?: number;
+  isPassed?: boolean;
 
   testToken?: string;
 }

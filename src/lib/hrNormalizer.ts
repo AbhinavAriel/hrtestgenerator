@@ -17,6 +17,8 @@ export const normalizeRow = (r: any): HrRow => {
     status: r.status ?? r.Status ?? "Created",
     answeredCount: r.answeredCount ?? r.AnsweredCount ?? 0,
     correctCount: r.correctCount ?? r.CorrectCount ?? 0,
+    scorePercentage: r.scorePercentage ?? r.ScorePercentage ?? 0, 
+    isPassed: r.isPassed ?? r.IsPassed ?? false,    
     createdAtUtc: r.createdAtUtc ?? r.CreatedAtUtc ?? null,
     submittedAtUtc: r.submittedAtUtc ?? r.SubmittedAtUtc ?? null,
     testToken: r.testToken ?? r.TestToken ?? null,

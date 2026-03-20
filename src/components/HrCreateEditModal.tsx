@@ -27,6 +27,8 @@ export default function HrCreateEditModal({
 
   const techOptions: Option[] = normalizeTechOptions(techOptionsNormalized)
 
+  const isSubmitted = (editRow?.status ?? "").toLowerCase() === "submitted"
+
   const removeSpaces = (value: string) =>
     value.replace(/\s+/g, "")
 
@@ -115,7 +117,7 @@ export default function HrCreateEditModal({
               }
               inputMode="numeric"
               className={inputStyle}
-              disabled={submitting}
+              disabled={submitting || isSubmitted}
             />
           </Field>
 
@@ -127,7 +129,7 @@ export default function HrCreateEditModal({
               }
               inputMode="numeric"
               className={inputStyle}
-              disabled={submitting}
+              disabled={submitting || isSubmitted}
             />
           </Field>
 
@@ -136,7 +138,7 @@ export default function HrCreateEditModal({
               value={form.level || ""}
               onChange={(e) => setField("level", e.target.value)}
               className={inputStyle}
-              disabled={submitting}
+              disabled={submitting || isSubmitted}
             >
               <option value="">Select level</option>
 
@@ -159,7 +161,7 @@ export default function HrCreateEditModal({
               onChange={(v) => setField("techStackIds", v)}
               getOptionLabel={(o: Option) => o.label}
               getOptionValue={(o: Option) => o.value}
-              disabled={submitting}
+              disabled={submitting || isSubmitted}
               placeholder="Search & select tech..."
               error={!!errors.techStackIds}
             />

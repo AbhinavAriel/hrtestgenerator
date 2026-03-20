@@ -35,6 +35,10 @@ export interface HrTestReport {
   AnsweredCount?: number
   correctCount?: number
   CorrectCount?: number
+  scorePercentage?: number
+  ScorePercentage?: number
+  isPassed?: boolean
+  IsPassed?: boolean
   applicantName?: string
   ApplicantName?: string
   email?: string
