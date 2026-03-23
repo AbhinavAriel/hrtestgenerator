@@ -176,7 +176,7 @@ export default function HrCreateEditModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-lg border cursor-pointer border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
           >
             Cancel
           </button>
@@ -184,7 +184,7 @@ export default function HrCreateEditModal({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 disabled:opacity-60"
+            className="rounded-lg cursor-pointer bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 disabled:opacity-60"
           >
             {submitting
               ? editRow

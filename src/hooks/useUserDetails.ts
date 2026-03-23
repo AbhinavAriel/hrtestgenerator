@@ -76,16 +76,17 @@ export function useUserDetails() {
                 email: form.email.trim(),
                 phone: form.phone.trim()
             })
+            const resolvedId = result.id || result.userId || result.userID
 
-            const normalizedUser: Applicant = {
-                id: result.id || result.userId || result.userID,
-                name: result.fullName,
-                email: result.email,
-                phone: result.phoneNumber
+            if (!resolvedId) {
+                throw new Error("Registration succeeded but user id not returned.")
             }
 
-            if (!normalizedUser.id) {
-                throw new Error("Registration succeeded but user id not returned.")
+            const normalizedUser: Applicant = {
+                id:    resolvedId,
+                name:  result.fullName,
+                email: result.email,
+                phone: result.phoneNumber,
             }
 
             setUser(normalizedUser)

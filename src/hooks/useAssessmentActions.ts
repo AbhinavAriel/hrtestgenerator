@@ -4,20 +4,12 @@ import toast from "react-hot-toast";
 
 import { submitAnswer } from "../api/answersApi";
 import { submitHrTest } from "../api/hrApi";
-
 import type { RefObject } from "react";
+import type { AnswerMap, User } from "../types/assessment";
 
 interface Question {
   id: string;
 }
-
-interface User {
-  applicantId?: string;
-  id?: string;
-  userId?: string;
-}
-
-type AnswerMap = Record<string, string | null>;
 
 interface UseAssessmentActionsProps {
   testId: string;
@@ -26,7 +18,7 @@ interface UseAssessmentActionsProps {
   setAnswers: React.Dispatch<React.SetStateAction<AnswerMap>>;
   user: User | null;
   ctx: any;
-  calcElapsedSeconds?: (() => number) | undefined; // optional — wired from useAssessmentTimer
+  calcElapsedSeconds?: (() => number) | undefined;
 }
 
 interface UseAssessmentActionsReturn {
@@ -58,23 +50,13 @@ export function useAssessmentActions({
   const [tabWarnings, setTabWarnings] = useState<number>(0);
 
   const submittedRef = useRef<boolean>(false);
-  const savingRef = useRef<boolean>(false);
-
-  const answersRef = useRef<AnswerMap>(answers);
-
-  // Keep a stable ref to calcElapsedSeconds so closures always get latest version
+  const savingRef    = useRef<boolean>(false);
+  const answersRef   = useRef<AnswerMap>(answers);
   const calcElapsedRef = useRef<(() => number) | undefined>(calcElapsedSeconds);
-  useEffect(() => {
-    calcElapsedRef.current = calcElapsedSeconds;
-  }, [calcElapsedSeconds]);
 
-  useEffect(() => {
-    answersRef.current = answers;
-  }, [answers]);
-
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [testId]);
+  useEffect(() => { calcElapsedRef.current = calcElapsedSeconds; }, [calcElapsedSeconds]);
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+  useEffect(() => { setCurrentIndex(0); }, [testId]);
 
   const currentQuestion: Question | null = questions?.[currentIndex] ?? null;
 
@@ -82,42 +64,22 @@ export function useAssessmentActions({
     user?.applicantId || user?.id || user?.userId;
 
   const getElapsed = (): number =>
-    typeof calcElapsedRef.current === "function"
-      ? calcElapsedRef.current()
-      : 0;
+    typeof calcElapsedRef.current === "function" ? calcElapsedRef.current() : 0;
 
   const handleSelect = (optionId: string): void => {
     if (!currentQuestion) return;
-
-    setAnswers((prev) => ({
-      ...(prev || {}),
-      [currentQuestion.id]: optionId,
-    }));
+    setAnswers((prev) => ({ ...(prev || {}), [currentQuestion.id]: optionId }));
   };
 
-  const saveCurrentAnswer = async ({
-    allowSkip = true,
-  }: { allowSkip?: boolean } = {}): Promise<boolean> => {
-
+  const saveCurrentAnswer = async ({ allowSkip = true } = {}): Promise<boolean> => {
     if (!currentQuestion) return true;
 
     const applicantId = getApplicantId();
-
-    if (!applicantId) {
-      toast.error("Missing applicant id. Please restart test.");
-      return false;
-    }
-
-    if (!testId) {
-      toast.error("Missing test id. Please open the test link again.");
-      return false;
-    }
+    if (!applicantId) { toast.error("Missing applicant id. Please restart test."); return false; }
+    if (!testId)       { toast.error("Missing test id. Please open the test link again."); return false; }
 
     const selectedOptionId = answersRef.current?.[currentQuestion.id] ?? null;
-
-    if (!selectedOptionId) {
-      return allowSkip ? true : false;
-    }
+    if (!selectedOptionId) return allowSkip;
 
     if (savingRef.current) return false;
     savingRef.current = true;
@@ -130,7 +92,6 @@ export function useAssessmentActions({
         selectedOptionId,
         elapsedSeconds: getElapsed(),
       });
-
       return true;
     } catch (e: any) {
       console.error("Save answer failed", e);
@@ -142,70 +103,39 @@ export function useAssessmentActions({
   };
 
   const submitAllAnswers = async (): Promise<boolean> => {
-
     const applicantId = getApplicantId();
-
-    if (!applicantId) {
-      toast.error("Missing applicant id. Please restart test.");
-      return false;
-    }
-
-    if (!testId) {
-      toast.error("Missing test id. Please open the test link again.");
-      return false;
-    }
+    if (!applicantId) { toast.error("Missing applicant id. Please restart test."); return false; }
+    if (!testId)       { toast.error("Missing test id. Please open the test link again."); return false; }
 
     const elapsedSeconds = getElapsed();
 
     for (const q of questions || []) {
-
       const selectedOptionId = answersRef.current?.[q.id] ?? null;
-
       try {
-        await submitAnswer({
-          testId,
-          applicantId,
-          questionId: q.id,
-          selectedOptionId,
-          elapsedSeconds,
-        });
+        await submitAnswer({ testId, applicantId, questionId: q.id, selectedOptionId, elapsedSeconds });
       } catch (e: any) {
         console.error("Submit answer failed for question:", q?.id, e);
         toast.error(e?.message || "Failed to submit answers.");
         return false;
       }
     }
-
     return true;
   };
 
   const handleSubmit = async (): Promise<void> => {
-
     if (submittedRef.current) return;
     submittedRef.current = true;
 
     try {
-
       const okCurrent = await saveCurrentAnswer({ allowSkip: true });
-
-      if (!okCurrent) {
-        submittedRef.current = false;
-        return;
-      }
+      if (!okCurrent) { submittedRef.current = false; return; }
 
       const okAll = await submitAllAnswers();
-
-      if (!okAll) {
-        submittedRef.current = false;
-        return;
-      }
+      if (!okAll) { submittedRef.current = false; return; }
 
       await submitHrTest(testId);
-
       ctx.setIsSubmitted?.(true);
-
       navigate("/result", { replace: true, state: { testId } });
-
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "Failed to submit test.");
@@ -214,44 +144,24 @@ export function useAssessmentActions({
   };
 
   const handlePrev = async (): Promise<void> => {
-
     if (!currentQuestion || submittedRef.current) return;
-
     await saveCurrentAnswer({ allowSkip: true });
-
-    if (currentIndex > 0) {
-      setCurrentIndex((i) => i - 1);
-    }
+    if (currentIndex > 0) setCurrentIndex((i) => i - 1);
   };
 
   const handleNext = async (): Promise<void> => {
-
     if (!currentQuestion || submittedRef.current) return;
-
     const ok = await saveCurrentAnswer({ allowSkip: true });
-
     if (!ok) return;
-
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex((i) => i + 1);
-    } else {
-      handleSubmit();
-    }
+    if (currentIndex < questions.length - 1) setCurrentIndex((i) => i + 1);
+    else handleSubmit();
   };
 
-  const incrementTabWarning = (): void =>
-    setTabWarnings((w) => w + 1);
+  const incrementTabWarning = (): void => setTabWarnings((w) => w + 1);
 
   return {
-    currentIndex,
-    currentQuestion,
-    tabWarnings,
-    incrementTabWarning,
-    submittedRef,
-    savingRef,
-    handleSelect,
-    handlePrev,
-    handleNext,
-    handleSubmit,
+    currentIndex, currentQuestion, tabWarnings, incrementTabWarning,
+    submittedRef, savingRef,
+    handleSelect, handlePrev, handleNext, handleSubmit,
   };
 }

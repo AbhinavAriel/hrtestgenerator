@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { RowData } from "../../types/hrTable";
+import type { HrRow } from "../../types/hr";
 
 interface Props {
-  row: RowData;
-  onEdit?: (row: RowData) => void;
-  onDelete?: (row: RowData) => void;
-  onOpenTab?: (row: RowData) => void;
-  onRowClick?: (row: RowData) => void;
+  row: HrRow;
+  onEdit?: (row: HrRow) => void;
+  onDelete?: (row: HrRow) => void;
+  onOpenTab?: (row: HrRow) => void;
+  onRowClick?: (row: HrRow) => void;
 }
 
 const EditIcon = () => (

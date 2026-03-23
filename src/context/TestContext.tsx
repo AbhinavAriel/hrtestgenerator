@@ -1,13 +1,16 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from "react"
 
 interface User {
-  id: string
+  id?: string
   name?: string
   email?: string
   phone?: string
+  applicantId?: string
+  userId?: string
+  [key: string]: any
 }
 
-type AnswerMap = Record<string, string>
+type AnswerMap = Record<string, string | null>
 
 interface TestContextType {
   user: User | null

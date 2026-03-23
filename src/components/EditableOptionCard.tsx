@@ -25,7 +25,7 @@ export default function EditableOptionCard({
     >
       <div
         className={`
-          flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold
+          flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold shrink-0
           ${
             selected
               ? "bg-blue-600 text-white"
@@ -47,7 +47,7 @@ export default function EditableOptionCard({
 
       <div
         className={`
-          flex h-5 w-5 items-center justify-center rounded-full border-2 transition
+          relative h-5 w-5 shrink-0 rounded-full border transition flex justify-center items-center
           ${
             selected
               ? "border-blue-600"
@@ -56,7 +56,7 @@ export default function EditableOptionCard({
         `}
       >
         {selected && (
-          <div className="h-3 w-3 rounded-full bg-blue-600" />
+          <div className="h-2.5 w-2.5 rounded-full bg-blue-600" />
         )}
       </div>
     </div>

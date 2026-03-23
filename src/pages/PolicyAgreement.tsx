@@ -10,7 +10,7 @@ interface LoaderProps {
 
 function FullPageLoader({ message = "Loading..." }: LoaderProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url(../../bg-1.jpg)] bg-cover bg1 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[url(../../bg-1.webp)] bg-cover bg1 px-4">
       <div className="bg-white/90 backdrop-blur-xl shadow-xl rounded-2xl p-6 w-full max-w-md">
         <div className="flex items-center gap-3">
           <div className="h-5 w-5 rounded-full border-2 border-gray-300 border-t-gray-800 animate-spin" />
@@ -140,7 +140,7 @@ export default function PolicyAgreement() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url(../../bg-1.jpg)] bg-cover bg1">
+    <div className="min-h-screen flex items-center justify-center bg-[url(../../bg-1.webp)] bg-cover bg1">
       <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-2xl relative z-50">
 
         <h2 className="text-xl font-bold mb-4">

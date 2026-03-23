@@ -81,21 +81,21 @@ export default function HrCreateTest() {
 
             <button
               onClick={handleLogout}
-              className="rounded-xl border border-red-200 bg-red-100 px-5 py-2.5 text-sm text-red-700 hover:bg-red-200"
+              className="rounded-xl border cursor-pointer border-red-200 bg-red-100 px-5 py-2.5 text-sm text-red-700 hover:bg-red-200"
             >
               Logout
             </button>
 
             <button
               onClick={() => navigate("/admin/questions/create")}
-              className="rounded-xl border border-blue-200 bg-white px-5 py-2.5 text-sm text-blue-700 hover:bg-blue-50"
+              className="rounded-xl border cursor-pointer border-blue-200 bg-white px-5 py-2.5 text-sm text-blue-700 hover:bg-blue-50"
             >
               + Create Question
             </button>
 
             <button
               onClick={openCreateModal}
-              className="rounded-xl bg-linear-to-r from-blue-400 to-blue-900 px-5 py-2.5 text-sm text-white"
+              className="rounded-xl cursor-pointer bg-linear-to-r from-blue-400 to-blue-900 px-5 py-2.5 text-sm text-white"
             >
               + Create Test
             </button>
@@ -135,7 +135,7 @@ export default function HrCreateTest() {
 
             <button
               onClick={() => setActiveTab("table")}
-              className={`rounded-t-xl px-4 py-2 text-sm ${
+              className={`rounded-t-xl px-4 py-2 text-sm cursor-pointer ${
                 activeTab === "table"
                   ? "bg-white text-blue-800 border border-b-white border-gray-200"
                   : "bg-blue-100 text-blue-700 hover:bg-blue-200"
@@ -147,20 +147,20 @@ export default function HrCreateTest() {
             {openTabs.map((tab) => (
               <div
                 key={tab.key}
-                className={`flex items-center gap-2 rounded-t-xl px-3 py-2 text-sm ${
+                className={`flex items-center gap-2 rounded-t-xl px-3 py-2 text-sm cursor-pointer ${
                   activeTab === tab.key
                     ? "bg-white text-blue-800 border border-b-white border-gray-200"
                     : "bg-blue-100 text-blue-700 hover:bg-blue-200"
                 }`}
               >
 
-                <button onClick={() => setActiveTab(tab.key)}>
+                <button onClick={() => setActiveTab(tab.key)} className="cursor-pointer">
                   {tab.label}
                 </button>
 
                 <button
                   onClick={() => closeTab(tab.key)}
-                  className="text-red-500 hover:text-red-700"
+                  className="text-red-500 hover:text-red-700 cursor-pointer"
                 >
                   ✕
                 </button>

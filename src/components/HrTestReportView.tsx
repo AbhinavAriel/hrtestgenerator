@@ -44,7 +44,6 @@ export default function HrTestReportView({
           </div>
         </div>
 
-        {/* Stats — 6 cards */}
         <div className="grid grid-cols-3 sm:grid-cols-4 mt-4 gap-3">
 
           <StatCard
@@ -96,7 +95,6 @@ export default function HrTestReportView({
 
       </div>
 
-      {/* ── Questions ── */}
       <div className="mt-6 space-y-4">
         {questions.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600">
@@ -167,7 +165,6 @@ export default function HrTestReportView({
   )
 }
 
-// ─── Shared sub-components ───────────────────────────────────────────────────
 
 function StatCard({ label, value, color }: {
   label: string

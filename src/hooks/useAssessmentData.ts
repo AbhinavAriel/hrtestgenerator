@@ -4,17 +4,7 @@ import toast from "react-hot-toast";
 
 import { getQuestions } from "../api/questionsApi";
 import { getHrTestById } from "../api/hrApi";
-
-interface Question {
-  id: string;
-  order?: number;
-}
-
-interface User {
-  id?: string;
-  applicantId?: string;
-  [key: string]: any;
-}
+import type { User } from "../types/assessment";
 
 interface UseAssessmentDataProps {
   testId: string;
@@ -23,7 +13,7 @@ interface UseAssessmentDataProps {
 }
 
 interface UseAssessmentDataReturn {
-  questions: Question[];
+  questions: { id: string; order?: number }[];
   loading: boolean;
   durationSeconds: number | null;
 }
@@ -36,7 +26,7 @@ export function useAssessmentData({
 
   const navigate = useNavigate();
 
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<{ id: string; order?: number }[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
 
@@ -46,10 +36,7 @@ export function useAssessmentData({
 
     const load = async () => {
 
-      // Guard: do nothing if testId is not ready
       if (!testId) return;
-
-      // Guard: do nothing until user is in context
       if (!user?.id) return;
 
       try {
@@ -63,20 +50,9 @@ export function useAssessmentData({
 
         if (!mounted) return;
 
-        /*
-        ─────────────────────────────────────────
-        UNWRAP API RESPONSE ENVELOPE
-        Both APIs return: { isSuccess, data: {...}, errors, message }
-        We must read .data before accessing test/applicant/questions
-        ─────────────────────────────────────────
-        */
         const r = (rawTestDetail as any);
-        const testDetail = r?.data ?? r; // unwrap { isSuccess, data: {...} }
-
-        const test =
-          testDetail?.test ??
-          testDetail?.Test ??
-          null;
+        const testDetail = r?.data ?? r;
+        const test = testDetail?.test ?? testDetail?.Test ?? null;
 
         // ── Submitted check ──────────────────────────────────────
         const submittedAt =
@@ -100,10 +76,7 @@ export function useAssessmentData({
         }
 
         // ── Applicant sync ───────────────────────────────────────
-        const applicant =
-          testDetail?.applicant ??
-          testDetail?.Applicant ??
-          null;
+        const applicant = testDetail?.applicant ?? testDetail?.Applicant ?? null;
 
         const applicantId =
           applicant?.id ??
@@ -128,24 +101,15 @@ export function useAssessmentData({
         }
 
         // ── Questions ────────────────────────────────────────────
-        // Questions API also returns { isSuccess, data: [...] }
         const qr = (rawQuestions as any);
         const questionList = qr?.data ?? qr;
-
-        const list: Question[] = Array.isArray(questionList)
-          ? questionList
-          : [];
-
-        const sorted = [...list].sort(
-          (a, b) => (a.order || 0) - (b.order || 0)
-        );
-
+        const list = Array.isArray(questionList) ? questionList : [];
+        const sorted = [...list].sort((a, b) => (a.order || 0) - (b.order || 0));
         setQuestions(sorted);
 
         // ── Duration ─────────────────────────────────────────────
         const durationMinutes = Number(
-          test?.durationMinutes ??
-          test?.DurationMinutes
+          test?.durationMinutes ?? test?.DurationMinutes
         );
 
         if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
@@ -172,9 +136,7 @@ export function useAssessmentData({
 
     load();
 
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
 
   }, [testId, user?.id]);
 

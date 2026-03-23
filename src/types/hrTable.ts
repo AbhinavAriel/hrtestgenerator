@@ -1,13 +1,13 @@
 export interface RowData {
-  testId?: number | string;
-  serialNo?: number;
+  testId?: string | null;
+  serialNo?: number | null;
 
-  applicantName?: string;
-  email?: string;
+  applicantName?: string | null;
+  email?: string | null;
 
-  level?: string;
-  totalQuestions?: number;
-  durationMinutes?: number;
+  level?: string | null;
+  totalQuestions?: number | null;
+  durationMinutes?: number | null;
 
   techStacks?: string[];
 
@@ -18,7 +18,7 @@ export interface RowData {
   scorePercentage?: number;
   isPassed?: boolean;
 
-  testToken?: string;
+  testToken?: string | null;
 }
 
 export interface HrTableProps {

@@ -53,7 +53,7 @@ function CandidateInfo({ report }: { report: HrTestReport }) {
           { label: "name", value: report.applicantName ?? report.ApplicantName },
           { label: "email", value: report.email ?? report.Email },
           { label: "phone", value: report.phoneNumber ?? report.PhoneNumber },
-          { label: "score", value: report.scorePercentage ?? report.scorePercentage },
+          { label: "score", value: report.scorePercentage ?? report.ScorePercentage },
         ].map(({ label, value }) => (
           <div key={label}>
             <div className="text-xs text-gray-500">{label}</div>
@@ -149,6 +149,8 @@ export default function HrTestPreview() {
   }
 
   useEffect(() => {
+    if (!testId) return
+
     let mounted = true
       ; (async () => {
         try {
@@ -182,7 +184,7 @@ export default function HrTestPreview() {
   return (
     <div className="min-h-screen bg-blue-50">
 
-      <div className="max-w-6xl mx-auto py-8">
+      <div className="max-w-6xl mx-auto py-8 px-4">
         <button
           onClick={goBack}
           className="bg-blue-100 border border-blue-200 hover:bg-blue-200 cursor-pointer text-xs py-1 px-3 rounded-lg text-blue-600 font-semibold"
@@ -220,13 +222,12 @@ export default function HrTestPreview() {
             </div>
           </div>
 
-          {/* Stats — 6 cards */}
+          {/* Stats */}
           <div className="grid grid-cols-3 sm:grid-cols-4 mt-4 gap-3">
             <StatCard label="Total Questions" value={report.totalQuestions ?? report.TotalQuestions ?? 0} border="border-yellow-100" bg="bg-yellow-50" />
             <StatCard label="Duration (min)" value={report.durationMinutes ?? report.DurationMinutes ?? 0} border="border-blue-100" bg="bg-blue-50" />
             <StatCard label="Answered" value={report.answeredCount ?? report.AnsweredCount ?? 0} border="border-red-100" bg="bg-red-50" />
             <StatCard label="Correct" value={report.correctCount ?? report.CorrectCount ?? 0} border="border-green-100" bg="bg-green-50" />
-
           </div>
 
           <CandidateInfo report={report} />

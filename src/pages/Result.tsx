@@ -8,8 +8,6 @@ export default function Result() {
   const { setAgreed, setAnswers, setIsSubmitted } = useTest();
 
   useEffect(() => {
-
-    // Clear assessment state so candidate cannot go back
     setAgreed(false);
     setAnswers({});
     setIsSubmitted(true);
@@ -18,22 +16,30 @@ export default function Result() {
       navigate("/test-submitted", { replace: true });
     };
 
-    // Push an extra history entry so back button is blocked
     window.history.pushState(null, "", window.location.href);
     window.addEventListener("popstate", handlePopState);
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-
   }, [navigate, setAgreed, setAnswers, setIsSubmitted]);
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-100">
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-xl text-center">
-        <div className="text-4xl font-bold text-blue-600 mb-4">
-          Thank You!
+    <div className="min-h-screen flex items-center justify-center bg-[url(../../public/bg-2.webp)] bg-cover bg-center px-4">
+      <div className="w-full max-w-xl rounded-[28px] border border-white/30 bg-white/80 p-8 shadow-2xl backdrop-blur-xl">
+
+        <div className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-green-700">
+          Assessment Complete
         </div>
+
+        <h1 className="mt-5 text-3xl font-bold text-slate-900">
+          Thank you!
+        </h1>
+
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          Your responses have been recorded successfully. Our team will review your assessment and get back to you shortly.
+        </p>
+
       </div>
     </div>
   );
