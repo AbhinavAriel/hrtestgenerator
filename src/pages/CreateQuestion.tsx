@@ -1,104 +1,14 @@
-import { useMemo, useState } from "react"
-import toast from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
-import { createQuestion } from "../api/questionsApi"
-import { useHrData } from "../hooks/useHrData"
 import EditableOptionCard from "../components/EditableOptionCard"
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-interface QuestionOption {
-  text: string
-  isCorrect: boolean
-}
-
-interface CreateQuestionForm {
-  text: string
-  techStackId: string
-  level: string
-  options: QuestionOption[]
-}
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const DEFAULT_OPTIONS: QuestionOption[] = [
-  { text: "", isCorrect: true },
-  { text: "", isCorrect: false },
-  { text: "", isCorrect: false },
-  { text: "", isCorrect: false },
-]
-
-const DEFAULT_FORM: CreateQuestionForm = {
-  text: "",
-  techStackId: "",
-  level: "",
-  options: DEFAULT_OPTIONS,
-}
-
-// ─── Component ───────────────────────────────────────────────────────────────
+import { useCreateQuestion } from "../hooks/Usecreatequestion"
 
 export default function CreateQuestion() {
   const navigate = useNavigate()
-  const { meta } = useHrData()
-
-  const techOptions = useMemo(() => {
-    const raw = meta?.techStacks ?? []
-    return raw.map((t: any) => ({
-      value: (t.id ?? t.value) as string,
-      label: (t.name ?? t.label) as string,
-    }))
-  }, [meta])
-
-  const levelOptions = useMemo(() => {
-    const raw = meta?.levels?.length ? meta.levels : ["Beginner", "Intermediate", "Professional"]
-    return raw.map((l) => (typeof l === "string" ? l : (l as any)?.label || (l as any)?.value || ""))
-  }, [meta])
-
-  const [form, setForm] = useState<CreateQuestionForm>(DEFAULT_FORM)
-  const [submitting, setSubmitting] = useState(false)
-
-  const setField = <K extends keyof CreateQuestionForm>(key: K, value: CreateQuestionForm[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const setOptionText = (index: number, value: string) => {
-    setForm((prev) => ({
-      ...prev,
-      options: prev.options.map((opt, i) =>
-        i === index ? { ...opt, text: value } : opt
-      ),
-    }))
-  }
-
-  const setCorrectOption = (index: number) => {
-    setForm((prev) => ({
-      ...prev,
-      options: prev.options.map((opt, i) => ({ ...opt, isCorrect: i === index })),
-    }))
-  }
-
-  const resetForm = () => setForm(DEFAULT_FORM)
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (submitting) return
-
-    try {
-      setSubmitting(true)
-      await createQuestion({
-        text: form.text,
-        techStackId: form.techStackId,
-        level: form.level,
-        options: form.options,
-      })
-      toast.success("Question created successfully.")
-      resetForm()
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to create question")
-    } finally {
-      setSubmitting(false)
-    }
-  }
+  const {
+    form, techOptions, levelOptions, submitting,
+    setField, setOptionText, setCorrectOption,
+    resetForm, handleSubmit,
+  } = useCreateQuestion()
 
   return (
     <div className="min-h-screen bg-blue-50">
@@ -109,11 +19,8 @@ export default function CreateQuestion() {
             <h1 className="text-4xl font-bold bg-linear-to-r from-blue-400 to-blue-700 bg-clip-text text-transparent">
               Create Question
             </h1>
-            <p className="text-sm text-blue-600">
-              Add new MCQ questions for different tech stacks.
-            </p>
+            <p className="text-sm text-blue-600">Add new MCQ questions for different tech stacks.</p>
           </div>
-
           <button
             type="button"
             onClick={() => navigate("/admin")}
@@ -127,9 +34,7 @@ export default function CreateQuestion() {
           <form onSubmit={handleSubmit} className="space-y-6">
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-800">
-                Question Text
-              </label>
+              <label className="mb-1 block text-sm font-medium text-gray-800">Question Text</label>
               <textarea
                 value={form.text}
                 onChange={(e) => setField("text", e.target.value)}
@@ -142,9 +47,7 @@ export default function CreateQuestion() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-800">
-                  Tech Stack
-                </label>
+                <label className="mb-1 block text-sm font-medium text-gray-800">Tech Stack</label>
                 <select
                   value={form.techStackId}
                   onChange={(e) => setField("techStackId", e.target.value)}
@@ -153,17 +56,13 @@ export default function CreateQuestion() {
                 >
                   <option value="">Select tech stack</option>
                   {techOptions.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
+                    <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-800">
-                  Level
-                </label>
+                <label className="mb-1 block text-sm font-medium text-gray-800">Level</label>
                 <select
                   value={form.level}
                   onChange={(e) => setField("level", e.target.value)}
@@ -172,9 +71,7 @@ export default function CreateQuestion() {
                 >
                   <option value="">Select level</option>
                   {levelOptions.map((l) => (
-                    <option key={l} value={l}>
-                      {l}
-                    </option>
+                    <option key={l} value={l}>{l}</option>
                   ))}
                 </select>
               </div>
@@ -206,7 +103,6 @@ export default function CreateQuestion() {
               >
                 Reset
               </button>
-
               <button
                 type="submit"
                 disabled={submitting}

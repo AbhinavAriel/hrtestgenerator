@@ -19,11 +19,7 @@ export default function Assessment() {
 
   const { agreed, answers, setAnswers, user, setUser, testId } = ctx;
 
-  /*
-  ----------------------------------------
-  POLICY GUARD
-  ----------------------------------------
-  */
+  /* POLICY GUARD */
   useEffect(() => {
     if (!agreed) {
       navigate("/policy", { replace: true });
@@ -64,20 +60,9 @@ export default function Assessment() {
     setAnswers,
     user,
     ctx,
-    // calcElapsedSeconds wired below via the ref returned from the timer
     calcElapsedSeconds: undefined,
   });
 
-  /*
-  ----------------------------------------
-  TIMER — after actions so submittedRef
-  and handleSubmit are available.
-  calcElapsedSeconds is returned as a
-  stable ref-based function and passed
-  back into actions via the actions hook's
-  internal ref (see useAssessmentActions).
-  ----------------------------------------
-  */
   const { totalTime, calcElapsedSeconds } = useAssessmentTimer({
     startSeconds: durationSeconds,
     loading,
@@ -103,6 +88,7 @@ export default function Assessment() {
     blockContextMenu: true,
     blockDevtoolsShortcuts: true,
     detectTabSwitch: true,
+    blockScreenshot: true,
   });
 
   /*
@@ -201,7 +187,7 @@ export default function Assessment() {
                 <button
                   disabled={currentIndex === 0 || savingRef.current}
                   onClick={handlePrev}
-                  className={`px-6 py-3 text-sm rounded-xl font-medium transition ${
+                  className={`px-6 py-3 text-sm rounded-xl cursor-pointer font-medium transition ${
                     currentIndex === 0 || savingRef.current
                       ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                       : "bg-white border border-gray-300 hover:bg-gray-50"
@@ -213,7 +199,7 @@ export default function Assessment() {
                 <button
                   disabled={savingRef.current}
                   onClick={isLastQuestion ? handleSubmit : handleNext}
-                  className={`px-6 py-3 text-sm rounded-xl text-white font-medium transition ${
+                  className={`px-6 py-3 text-sm cursor-pointer rounded-xl text-white font-medium transition ${
                     savingRef.current
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-blue-600 hover:bg-blue-700"

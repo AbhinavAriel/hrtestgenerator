@@ -49,6 +49,12 @@ export interface HrTestReport {
   TechStacks?: string[]
   questions?: ReportQuestion[]
   Questions?: ReportQuestion[]
+  level?: string
+  Level?: string
+  applicantId?: string
+  ApplicantId?: string
+  createdAtUtc?: string
+  submittedAtUtc?: string
 }
 
 export interface HrTestReportViewProps {
