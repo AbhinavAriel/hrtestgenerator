@@ -1,6 +1,20 @@
-import axios, { AxiosError } from "axios"
+/**
+ * applicantApi.ts
+ *
+ * Candidate / applicant registration.
+ *
+ * Previously this file created its own raw `axios` instance with a hardcoded
+ * base URL.  It is now migrated to the shared `request()` from http.ts so:
+ *   - The base URL is driven by the VITE_API_URL env variable (no hardcoded values).
+ *   - Errors are normalised by the shared response interceptor.
+ *   - Any future auth header requirement is handled automatically.
+ */
 
-const API_BASE_URL = "http://localhost:5143/api"
+import { request } from "./http"
+import { normalizeApiError } from "./apiHelper"
+import { API_ENDPOINTS } from "../constants/apiEndpoints"
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface CreateApplicantPayload {
   name: string
@@ -17,31 +31,31 @@ export interface ApplicantResponse {
   phoneNumber: string
 }
 
+// ─── API call ─────────────────────────────────────────────────────────────────
+
 export const createApplicant = async (
   data: CreateApplicantPayload
 ): Promise<ApplicantResponse> => {
-
   try {
-
-    const response = await axios.post<ApplicantResponse>(
-      `${API_BASE_URL}/auth/register`,
-      {
-        fullName: data.name,
-        email: data.email,
+    // POST /api/Auth/register
+    // The endpoint is a public route — no Bearer token needed.
+    // http.ts will include the header only if admin_session exists in storage,
+    // which is fine (the server should simply ignore it for public routes).
+    const res = await request<any>(API_ENDPOINTS.AUTH.REGISTER, {
+      method: "POST",
+      data: {
+        fullName:    data.name,
+        email:       data.email,
         phoneNumber: data.phone,
-      }
-    )
+      },
+    })
 
-    return response.data
+    // The register endpoint may or may not wrap in { isSuccess, data }
+    // Handle both shapes gracefully.
+    const payload: ApplicantResponse = res?.data ?? res
 
-  } catch (error) {
-
-    const err = error as AxiosError<any>
-
-    const msg =
-      err?.response?.data?.message ||
-      "Unable to register. Please try again."
-
-    throw new Error(msg)
+    return payload
+  } catch (e) {
+    throw normalizeApiError(e)
   }
 }

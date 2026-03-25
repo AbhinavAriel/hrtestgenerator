@@ -18,6 +18,7 @@ export interface EditableOptionCardProps {
   onSelect: () => void
   onChange: (value: string) => void
   disabled?: boolean
+  error?: boolean   // true → red border on the card
 }
 
 export interface OptionCardProps {

@@ -1,13 +1,20 @@
+/**
+ * hrApi.ts
+ *
+ * All HR-facing API calls: meta, test CRUD, submit, report.
+ * Uses the shared request() from http.ts — no local axios instance.
+ */
+
 import { request } from "./http"
 import { API_ENDPOINTS } from "../constants/apiEndpoints"
 import { HrMeta, HrRow } from "../types/hr"
+
+// ─── Param / response types ──────────────────────────────────────────────────
 
 interface GetTestsParams {
   page?: number
   pageSize?: number
 }
-
-/* ---------- API RESPONSE TYPES ---------- */
 
 interface HrPagedData {
   items: HrRow[]
@@ -15,81 +22,77 @@ interface HrPagedData {
   page: number
 }
 
-interface HrTestsResponse {
+export interface HrTestsResponse {
   isSuccess: boolean
   message: string
   data: HrPagedData
 }
 
-/* ---------- META ---------- */
+// ─── Meta ────────────────────────────────────────────────────────────────────
 
 export const getHrMeta = async (): Promise<HrMeta> => {
   const res = await request<any>(API_ENDPOINTS.HR.META)
   return res?.data ?? res
 }
 
-/* ---------- TEST LIST ---------- */
+// ─── Test list ───────────────────────────────────────────────────────────────
 
 export const getHrTests = async (
   { page = 1, pageSize = 10 }: GetTestsParams = {}
 ): Promise<HrTestsResponse> => {
-
   return request<HrTestsResponse>(
     `${API_ENDPOINTS.HR.TESTS}?page=${page}&pageSize=${pageSize}`
   )
 }
 
-/* ---------- GET BY ID ---------- */
+// ─── Get by id ───────────────────────────────────────────────────────────────
 
 export const getHrTestById = (testId: string): Promise<HrRow> => {
   return request<HrRow>(API_ENDPOINTS.HR.TEST_BY_ID(testId))
 }
 
-/* ---------- GET BY TOKEN ---------- */
+// ─── Get by token (candidate entry link) ────────────────────────────────────
 
 export const getHrTestByToken = (token: string): Promise<HrRow> => {
   return request<HrRow>(API_ENDPOINTS.HR.TEST_BY_TOKEN(token))
 }
 
-/* ---------- CREATE ---------- */
+// ─── Create ──────────────────────────────────────────────────────────────────
 
-export const createHrTest = (payload: any): Promise<HrRow> => {
+export const createHrTest = (payload: unknown): Promise<HrRow> => {
   return request<HrRow>(API_ENDPOINTS.HR.TESTS, {
     method: "POST",
-    data: payload
+    data: payload,
   })
 }
 
-/* ---------- UPDATE ---------- */
+// ─── Update ──────────────────────────────────────────────────────────────────
 
-export const updateHrTest = (
-  testId: string,
-  payload: any
-): Promise<HrRow> => {
+export const updateHrTest = (testId: string, payload: unknown): Promise<HrRow> => {
   return request<HrRow>(API_ENDPOINTS.HR.TEST_BY_ID(testId), {
     method: "PUT",
-    data: payload
+    data: payload,
   })
 }
 
-/* ---------- DELETE ---------- */
+// ─── Delete ──────────────────────────────────────────────────────────────────
 
 export const deleteHrTest = (testId: string): Promise<void> => {
   return request<void>(API_ENDPOINTS.HR.TEST_BY_ID(testId), {
-    method: "DELETE"
+    method: "DELETE",
   })
 }
 
-/* ---------- SUBMIT ---------- */
+// ─── Submit ──────────────────────────────────────────────────────────────────
 
 export const submitHrTest = (testId: string): Promise<void> => {
   return request<void>(API_ENDPOINTS.HR.SUBMIT(testId), {
-    method: "POST"
+    method: "POST",
   })
 }
 
-/* ---------- REPORT ---------- */
+// ─── Report ──────────────────────────────────────────────────────────────────
 
-export const getHrTestReport = (testId: string) => {
+export const getHrTestReport = (testId: string): Promise<unknown> => {
   return request(API_ENDPOINTS.HR.REPORT(testId))
 }
