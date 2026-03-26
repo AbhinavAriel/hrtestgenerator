@@ -93,6 +93,10 @@ export const submitHrTest = (testId: string): Promise<void> => {
 
 // ─── Report ──────────────────────────────────────────────────────────────────
 
-export const getHrTestReport = (testId: string): Promise<unknown> => {
-  return request(API_ENDPOINTS.HR.REPORT(testId))
+// Return type is `any` intentionally — the report endpoint returns a server
+// envelope { isSuccess, data: HrTestReport } that callers unwrap themselves.
+// Using `unknown` here forces every call site to add unsafe casts; `any` keeps
+// the existing unwrap pattern readable while still flowing through TypeScript.
+export const getHrTestReport = (testId: string): Promise<any> => {
+  return request<any>(API_ENDPOINTS.HR.REPORT(testId))
 }
