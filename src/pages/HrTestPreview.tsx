@@ -19,7 +19,6 @@ type HrTestReport = BaseReport & {
   IsPassed?: boolean
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
 
 function StatCard({ label, value, border, bg }: {
   label: string; value: number | string; border: string; bg: string
@@ -133,7 +132,6 @@ function QuestionCard({ q }: { q: ReportQuestion }) {
   )
 }
 
-// ── NEW: Snapshot Gallery ────────────────────────────────────────────────────
 
 function SnapshotGallery({ snapshots, loading }: {
   snapshots: SnapshotRecord[]
@@ -144,7 +142,7 @@ function SnapshotGallery({ snapshots, loading }: {
   return (
     <div className="mt-8">
       <h2 className="text-lg font-bold text-gray-900 mb-3">
-        Proctoring Snapshots
+        Captured Snapshots
         <span className="ml-2 text-sm font-normal text-gray-500">
           ({snapshots.length} captured)
         </span>
@@ -214,7 +212,6 @@ function SnapshotGallery({ snapshots, loading }: {
   )
 }
 
-// ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function HrTestPreview() {
   const { testId } = useParams<{ testId: string }>()
@@ -248,7 +245,6 @@ export default function HrTestPreview() {
 
         if (!mounted) return
 
-        // Report — res.value is `any` because getHrTestReport returns Promise<any>
         if (res.status === "fulfilled") {
           const raw = res.value as any
           const outer = raw?.data ?? raw
@@ -348,7 +344,6 @@ export default function HrTestPreview() {
           )}
         </div>
 
-        {/* ── Questions ── */}
         <div className="mt-6 space-y-4">
           {questions.length === 0 ? (
             <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600">

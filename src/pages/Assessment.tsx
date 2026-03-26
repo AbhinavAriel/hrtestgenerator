@@ -3,14 +3,13 @@ import { useNavigate } from "react-router-dom";
 
 import { useTest } from "../context/TestContext";
 import OptionCard from "../components/OptionCard";
-import CameraPreview from "../components/CameraPreview";     
 import { formatTime } from "../lib/format";
 import { useAssessmentData } from "../hooks/useAssessmentData";
 import { useAssessmentTimer } from "../hooks/useAssessmentTimer";
 import { useAssessmentGuard } from "../hooks/useAssessmentGuard";
 import { useAssessmentActions } from "../hooks/useAssessmentActions";
 import { useAssessmentSecurity } from "../hooks/useAssessmentSecurity";
-import { useAssessmentCamera } from "../hooks/useAssessmentcamera"; 
+import { useAssessmentCamera } from "../hooks/useAssessmentCamera";
 
 import type { Question, Option } from "../types/assessment";
 
@@ -103,37 +102,29 @@ export default function Assessment() {
 
   /*
   ----------------------------------------
-  CAMERA PROCTORING
-  Enabled as soon as data is loaded and
-  test has not yet been submitted.
-  The hook handles permission request,
-  interval screenshots, and upload silently.
+  CAMERA — silent background capture.
+  videoRef must be attached to a real
+  (but hidden) <video> element so the hook
+  can call canvas.drawImage() on it.
   ----------------------------------------
   */
   const applicantId = user?.applicantId || user?.id || "";
 
-  const { videoRef, cameraStatus, snapshotCount, stopCamera } =
-    useAssessmentCamera({
-      testId:          testId || "",
-      applicantId,
-      enabled:         !loading && questions.length > 0,
-      intervalSeconds: 30,   // screenshot every 30 s — adjust as needed
-      submittedRef,
-    });
+  const { videoRef, stopCamera } = useAssessmentCamera({
+    testId:          testId || "",
+    applicantId,
+    enabled:         !loading && questions.length > 0,
+    intervalSeconds: 30,
+    submittedRef,
+  });
 
   // Stop the camera stream the moment the test is submitted
-  // (handleSubmit may be triggered by timer or guard as well)
-  const originalHandleSubmit = handleSubmit;
+  // (handleSubmit may also be triggered by timer or guard)
   const handleSubmitWithCamera = async () => {
     stopCamera();
-    await originalHandleSubmit();
+    await handleSubmit();
   };
 
-  /*
-  ----------------------------------------
-  SAFE LOADING STATES (AFTER HOOKS)
-  ----------------------------------------
-  */
   if (!user || !testId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -172,7 +163,6 @@ export default function Assessment() {
     <div className="min-h-screen flex bg-gray-100" {...containerProps}>
       <div className="flex-1 flex flex-col">
 
-        {/* ── Top bar ─────────────────────────────────────────────────── */}
         <div className="bg-white px-8 py-4 sticky top-0 z-10">
           <div className="max-w-6xl mx-auto w-full flex justify-between items-center">
 
@@ -193,7 +183,7 @@ export default function Assessment() {
           </div>
         </div>
 
-        {/* ── Question area ────────────────────────────────────────────── */}
+        {/* ── Question area ── */}
         <div className="flex-1 bg-gray-200 flex justify-center items-center p-6">
           <div className="bg-white w-full max-w-5xl rounded-3xl shadow-2xl p-10">
 
@@ -225,7 +215,7 @@ export default function Assessment() {
                 <button
                   disabled={currentIndex === 0 || savingRef.current}
                   onClick={handlePrev}
-                  className={`px-6 py-3 text-sm rounded-xl font-medium transition ${
+                  className={`px-6 py-3 text-sm cursor-pointer rounded-xl font-medium transition ${
                     currentIndex === 0 || savingRef.current
                       ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                       : "bg-white border border-gray-300 hover:bg-gray-50"
@@ -236,10 +226,8 @@ export default function Assessment() {
 
                 <button
                   disabled={savingRef.current}
-                  onClick={
-                    isLastQuestion ? handleSubmitWithCamera : handleNext
-                  }
-                  className={`px-6 py-3 text-sm rounded-xl text-white font-medium transition ${
+                  onClick={isLastQuestion ? handleSubmitWithCamera : handleNext}
+                  className={`px-6 py-3 text-sm cursor-pointer rounded-xl text-white font-medium transition ${
                     savingRef.current
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-blue-600 hover:bg-blue-700"
@@ -259,12 +247,20 @@ export default function Assessment() {
         </div>
 
       </div>
-
-      {/* ── Floating camera preview (bottom-right) ───────────────────── */}
-      <CameraPreview
-        videoRef={videoRef}
-        status={cameraStatus}
-        snapshotCount={snapshotCount}
+      
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        playsInline
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          width: 0,
+          height: 0,
+          opacity: 0,
+          pointerEvents: "none",
+        }}
       />
 
     </div>

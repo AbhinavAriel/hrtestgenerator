@@ -24,7 +24,6 @@ function FullPageLoader({ message = "Loading..." }: { message?: string }) {
   )
 }
 
-// Single camera / mic status row
 function PermissionRow({
   icon,
   label,
@@ -57,8 +56,6 @@ function PermissionRow({
     </div>
   )
 }
-
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function PolicyAgreement() {
 
@@ -131,7 +128,6 @@ export default function PolicyAgreement() {
     setStep("permissions")
   }
 
-  // ── Step 3 → 4: permissions confirmed, proceed to test ──────────────────
   const handleStartTest = () => {
     if (!allGranted) return
 
@@ -152,7 +148,6 @@ export default function PolicyAgreement() {
     return <FullPageLoader message="Validating test status..." />
   }
 
-  // ── STEP 1: Policy ────────────────────────────────────────────────────────
   if (step === "policy") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[url(../../bg-1.jpg)] bg-cover bg1">
@@ -198,7 +193,7 @@ export default function PolicyAgreement() {
               id="policy-check"
               checked={checked}
               onChange={(e) => setChecked(e.target.checked)}
-              className="w-4 h-4 accent-blue-600"
+              className="w-4 h-4 accent-blue-600 cursor-pointer"
             />
             <label htmlFor="policy-check" className="text-sm text-gray-700 cursor-pointer">
               I have read and agree to the assessment terms and conditions
@@ -263,8 +258,7 @@ export default function PolicyAgreement() {
             </p>
             <p className="text-xs text-blue-600">
               When you click "Allow Access", your browser will show a permission
-              dialog. Click <strong>Allow</strong> to grant access — just like
-              joining a video call on Zoom or Google Meet.
+              dialog. Click <strong>Allow</strong> to grant access
             </p>
           </div>
 
@@ -315,7 +309,7 @@ export default function PolicyAgreement() {
           <div className="flex gap-3">
             <button
               onClick={() => setStep("policy")}
-              className="px-5 py-3 rounded-xl border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition"
+              className="px-5 py-3 rounded-xl border cursor-pointer border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition"
             >
               ← Back
             </button>
