@@ -19,6 +19,7 @@ type HrTestReport = BaseReport & {
   IsPassed?: boolean
 }
 
+// ─── Sub-components ──────────────────────────────────────────────────────────
 
 function StatCard({ label, value, border, bg }: {
   label: string; value: number | string; border: string; bg: string
@@ -27,18 +28,6 @@ function StatCard({ label, value, border, bg }: {
     <div className={`rounded-xl border ${border} ${bg} p-3 shadow-md`}>
       <div className="text-xs text-gray-500">{label}</div>
       <div className="text-lg font-bold text-gray-900">{value}</div>
-    </div>
-  )
-}
-
-function ResultCard({ isPassed }: { isPassed: boolean }) {
-  return (
-    <div className={`rounded-xl border p-3 shadow-md ${isPassed ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
-      <div className="text-xs text-gray-500">Result</div>
-      <span className={`inline-flex mt-1 rounded-full px-2.5 py-1 text-xs font-semibold ${isPassed ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-        }`}>
-        {isPassed ? "Passed" : "Failed"}
-      </span>
     </div>
   )
 }
@@ -78,10 +67,10 @@ function OptionRow({ opt, selectedId, correctId }: {
   selectedId?: string | number | null
   correctId?: string | number | null
 }) {
-  const optId       = opt.id   ?? opt.Id
-  const optText     = opt.text ?? opt.Text
-  const isSelected  = Boolean(selectedId && optId === selectedId)
-  const isCorrectOpt = Boolean(correctId && optId === correctId)
+  const optId        = opt.id   ?? opt.Id
+  const optText      = opt.text ?? opt.Text
+  const isSelected   = Boolean(selectedId && optId === selectedId)
+  const isCorrectOpt = Boolean(correctId  && optId === correctId)
 
   return (
     <div className={`rounded-lg border px-4 py-2 text-sm flex items-center justify-between
@@ -132,24 +121,143 @@ function QuestionCard({ q }: { q: ReportQuestion }) {
   )
 }
 
+// ─── Image source resolver ────────────────────────────────────────────────────
+// imageUrl is now always a full Supabase public URL — constructed in snapShot.ts.
+// If it's empty the image failed / was never stored.
+function useImageSrc(snap: SnapshotRecord): { src: string | null; failed: boolean } {
+  const src    = snap.imageUrl || null
+  const failed = !src
+  return { src, failed }
+}
 
-function SnapshotGallery({ snapshots, loading }: {
-  snapshots: SnapshotRecord[]
-  loading: boolean
+// ─── Broken-image placeholder ─────────────────────────────────────────────────
+function BrokenImage({ small = false }: { small?: boolean }) {
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-gray-50">
+      <svg
+        className={`${small ? "w-5 h-5" : "w-8 h-8"} text-gray-300`}
+        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+          d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+          d="M3 15l5-5 4 4 3-3 4 4" />
+      </svg>
+      <span className={`${small ? "text-[8px]" : "text-xs"} text-gray-400`}>No preview</span>
+    </div>
+  )
+}
+
+// ─── Snapshot thumbnail ───────────────────────────────────────────────────────
+function SnapshotThumb({ snap, onClick }: { snap: SnapshotRecord; onClick: () => void }) {
+  const { src, failed } = useImageSrc(snap)
+  const time = new Date(snap.capturedAt).toLocaleTimeString()
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={failed}
+      className="group relative aspect-video rounded-lg overflow-hidden border border-gray-200 bg-gray-100 hover:border-blue-400 transition disabled:cursor-default"
+      title={new Date(snap.capturedAt).toLocaleString()}
+    >
+      {failed && <BrokenImage small />}
+      {src && (
+        <img
+          src={src}
+          alt={`Snapshot at ${time}`}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+        />
+      )}
+      <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] px-1 py-0.5 truncate">
+        {time}
+      </span>
+    </button>
+  )
+}
+
+// ─── Lightbox ─────────────────────────────────────────────────────────────────
+function Lightbox({
+  snap, total, index, onClose, onPrev, onNext,
+}: {
+  snap: SnapshotRecord; total: number; index: number
+  onClose: () => void; onPrev: () => void; onNext: () => void
 }) {
-  const [selected, setSelected] = useState<SnapshotRecord | null>(null)
+  const { src, failed } = useImageSrc(snap)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape")     onClose()
+      if (e.key === "ArrowLeft")  onPrev()
+      if (e.key === "ArrowRight") onNext()
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [onClose, onPrev, onNext])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative max-w-2xl w-full rounded-xl overflow-hidden shadow-2xl bg-black"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {total > 1 && (
+          <>
+            <button
+              onClick={onPrev}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white rounded-full w-9 h-9 flex items-center justify-center text-xl"
+            >‹</button>
+            <button
+              onClick={onNext}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white rounded-full w-9 h-9 flex items-center justify-center text-xl"
+            >›</button>
+          </>
+        )}
+
+        <div className="min-h-48 flex items-center justify-center bg-black">
+          {failed && <BrokenImage />}
+          {src && (
+            <img src={src} alt="Snapshot" className="w-full max-h-[70vh] object-contain" />
+          )}
+        </div>
+
+        <div className="bg-white px-4 py-2 text-xs text-gray-600 flex justify-between items-center">
+          <span>{index + 1} / {total} — {new Date(snap.capturedAt).toLocaleString()}</span>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700 font-bold text-base"
+          >✕</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Snapshot gallery ─────────────────────────────────────────────────────────
+function SnapshotGallery({ snapshots, loading }: { snapshots: SnapshotRecord[]; loading: boolean }) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const selected = selectedIndex !== null ? snapshots[selectedIndex] : null
+
+  const prev = () => setSelectedIndex((i) => i !== null ? (i - 1 + snapshots.length) % snapshots.length : null)
+  const next = () => setSelectedIndex((i) => i !== null ? (i + 1) % snapshots.length : null)
 
   return (
     <div className="mt-8">
       <h2 className="text-lg font-bold text-gray-900 mb-3">
         Captured Snapshots
-        <span className="ml-2 text-sm font-normal text-gray-500">
-          ({snapshots.length} captured)
-        </span>
+        {!loading && (
+          <span className="ml-2 text-sm font-normal text-gray-500">
+            ({snapshots.length} captured)
+          </span>
+        )}
       </h2>
 
       {loading && (
-        <div className="text-sm text-gray-500 py-4">Loading snapshots…</div>
+        <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500 text-center">
+          Loading snapshots…
+        </div>
       )}
 
       {!loading && snapshots.length === 0 && (
@@ -159,68 +267,37 @@ function SnapshotGallery({ snapshots, loading }: {
       )}
 
       {!loading && snapshots.length > 0 && (
-        <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-          {snapshots.map((snap) => (
-            <button
-              key={snap.id}
-              onClick={() => setSelected(snap)}
-              className="group relative aspect-video rounded-lg overflow-hidden border border-gray-200 bg-gray-100 hover:border-blue-400 transition"
-              title={new Date(snap.capturedAt).toLocaleString()}
-            >
-              <img
-                src={snap.imageUrl}
-                alt={`Snapshot at ${snap.capturedAt}`}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                loading="lazy"
-              />
-              <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] px-1 py-0.5 truncate">
-                {new Date(snap.capturedAt).toLocaleTimeString()}
-              </span>
-            </button>
-          ))}
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-md">
+          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+            {snapshots.map((snap, i) => (
+              <SnapshotThumb key={snap.id} snap={snap} onClick={() => setSelectedIndex(i)} />
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Lightbox */}
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          onClick={() => setSelected(null)}
-        >
-          <div
-            className="relative max-w-2xl w-full rounded-xl overflow-hidden shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={selected.imageUrl}
-              alt="Snapshot"
-              className="w-full"
-            />
-            <div className="bg-white px-4 py-2 text-xs text-gray-600 flex justify-between items-center">
-              <span>Captured: {new Date(selected.capturedAt).toLocaleString()}</span>
-              <button
-                onClick={() => setSelected(null)}
-                className="text-gray-400 hover:text-gray-700 font-bold text-base"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        </div>
+      {selected !== null && selectedIndex !== null && (
+        <Lightbox
+          snap={selected}
+          total={snapshots.length}
+          index={selectedIndex}
+          onClose={() => setSelectedIndex(null)}
+          onPrev={prev}
+          onNext={next}
+        />
       )}
     </div>
   )
 }
 
-
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function HrTestPreview() {
   const { testId } = useParams<{ testId: string }>()
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [report, setReport] = useState<HrTestReport | null>(null)
+  const navigate   = useNavigate()
 
-  // ← NEW
-  const [snapshots, setSnapshots]           = useState<SnapshotRecord[]>([])
+  const [loading,          setLoading]      = useState(true)
+  const [report,           setReport]       = useState<HrTestReport | null>(null)
+  const [snapshots,        setSnapshots]    = useState<SnapshotRecord[]>([])
   const [loadingSnapshots, setLoadingSnaps] = useState(false)
 
   const goBack = () => {
@@ -232,7 +309,6 @@ export default function HrTestPreview() {
     if (!testId) return
     let mounted = true
 
-    // Fetch report + snapshots in parallel
     ;(async () => {
       try {
         setLoading(true)
@@ -246,21 +322,17 @@ export default function HrTestPreview() {
         if (!mounted) return
 
         if (res.status === "fulfilled") {
-          const raw = res.value as any
+          const raw   = res.value as any
           const outer = raw?.data ?? raw
-          const r: HrTestReport =
-            outer?.isSuccess !== undefined ? outer.data : outer
+          const r: HrTestReport = outer?.isSuccess !== undefined ? outer.data : outer
           setReport(r)
         } else {
-          const reason = (res as PromiseRejectedResult).reason
-          toast.error(reason?.message || "Failed to load report")
+          toast.error((res as PromiseRejectedResult).reason?.message || "Failed to load report")
         }
 
-        // Snapshots
         if (snaps.status === "fulfilled") {
           setSnapshots((snaps.value as SnapshotRecord[]) ?? [])
         }
-        // snapshot errors are silently ignored — they're supplementary
 
       } finally {
         if (mounted) { setLoading(false); setLoadingSnaps(false) }
@@ -273,20 +345,20 @@ export default function HrTestPreview() {
   if (loading) return <div className="min-h-screen p-6 text-gray-600">Loading report...</div>
   if (!report)  return <div className="min-h-screen p-6 text-gray-600">No report found.</div>
 
-  const questions   = (report.questions  ?? report.Questions  ?? []) as ReportQuestion[]
-  const techStacks  = (report.techStacks ?? report.TechStacks ?? []) as string[]
-  const level       = report.level ?? report.Level
-  const isPassed    = report.isPassed ?? report.IsPassed ?? false
+  const questions  = (report.questions  ?? report.Questions  ?? []) as ReportQuestion[]
+  const techStacks = (report.techStacks ?? report.TechStacks ?? []) as string[]
+  const level      = report.level ?? report.Level
+  const isPassed   = report.isPassed ?? report.IsPassed ?? false
 
   return (
     <div className="min-h-screen bg-blue-50">
 
-      <div className="max-w-6xl mx-auto py-8">
+      <div className="max-w-6xl mx-auto py-8 px-4">
         <button
           onClick={goBack}
           className="bg-blue-100 border border-blue-200 hover:bg-blue-200 cursor-pointer text-xs py-1 px-3 rounded-lg text-blue-600 font-semibold"
         >
-          Go back
+          ← Go back
         </button>
       </div>
 
@@ -294,7 +366,6 @@ export default function HrTestPreview() {
 
         {/* ── Header card ── */}
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xl">
-
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-xl font-bold text-gray-900">Test Preview</h1>
@@ -304,14 +375,14 @@ export default function HrTestPreview() {
             </div>
             <div className="flex items-center gap-2">
               {level && (
-                <span className="inline-flex w-fit rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600">
+                <span className="inline-flex rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600">
                   {level}
                 </span>
               )}
-              <span className="inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold capitalize">
+              <span className="inline-flex rounded-full border px-3 py-1 text-xs font-semibold capitalize">
                 {report.status ?? report.Status ?? "-"}
               </span>
-              <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${
+              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                 isPassed
                   ? "bg-green-100 text-green-700 border border-green-200"
                   : "bg-red-100 text-red-700 border border-red-200"
@@ -344,6 +415,7 @@ export default function HrTestPreview() {
           )}
         </div>
 
+        {/* ── Questions ── */}
         <div className="mt-6 space-y-4">
           {questions.length === 0 ? (
             <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600">
@@ -356,7 +428,7 @@ export default function HrTestPreview() {
           )}
         </div>
 
-        {/* ── Proctoring snapshots ── */}   {/* ← NEW */}
+        {/* ── Proctoring snapshots ── */}
         <SnapshotGallery snapshots={snapshots} loading={loadingSnapshots} />
 
       </div>

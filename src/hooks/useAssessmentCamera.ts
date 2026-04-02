@@ -4,8 +4,8 @@ import { uploadSnapshot } from "../api/snapShot"
 interface UseAssessmentCameraProps {
   testId: string
   applicantId: string
-  enabled?: boolean         
-  intervalSeconds?: number  
+  enabled?: boolean
+  intervalSeconds?: number
   submittedRef: React.RefObject<boolean>
 }
 
@@ -47,6 +47,7 @@ export function useAssessmentCamera({
 
   const captureRef = useRef<() => Promise<void>>(async () => {})
 
+  // ── Core capture function — single-step DB-direct upload ─────────────────
   const captureAndUpload = useCallback(async () => {
     if (submittedRef.current)       return
     if (!videoRef.current)          return
@@ -60,17 +61,16 @@ export function useAssessmentCamera({
 
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height)
 
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.8)
+      // Encode as base64 data-URL — backend stores this directly in DB
+      const imageData  = canvas.toDataURL("image/jpeg", 0.7)
+      const capturedAt = new Date().toISOString()
 
-      await uploadSnapshot({
-        testId,
-        applicantId,
-        imageData:  dataUrl,
-        capturedAt: new Date().toISOString(),
-      })
+      // Single step: POST image data to backend
+      await uploadSnapshot({ testId, applicantId, imageData, capturedAt })
 
       setSnapshotCount((c) => c + 1)
     } catch (err) {
+      // Non-blocking — a failed snapshot never interrupts the test
       console.warn("[Camera] Snapshot upload failed:", err)
     }
   }, [testId, applicantId, cameraStatus, submittedRef])
@@ -102,7 +102,6 @@ export function useAssessmentCamera({
       setCameraStatus("requesting")
 
       try {
-        
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 320, height: 240, facingMode: "user" },
           audio: false,
@@ -124,7 +123,6 @@ export function useAssessmentCamera({
 
         setCameraStatus("active")
 
-        // First capture after 5 s, then every intervalSeconds
         const t = setTimeout(() => {
           captureRef.current()
           intervalId.current = setInterval(
@@ -143,7 +141,7 @@ export function useAssessmentCamera({
           err?.name === "PermissionDeniedError"
         ) {
           setCameraStatus("denied")
-          console.warn("[Camera] Permission revoked after policy page.")
+          console.warn("[Camera] Permission denied.")
         } else {
           setCameraStatus("error")
           console.warn("[Camera] Stream error:", err?.message)
