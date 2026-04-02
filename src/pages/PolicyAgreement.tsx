@@ -182,7 +182,7 @@ export default function PolicyAgreement() {
               <li>• No cheating or tab switching allowed</li>
               <li>• Do not refresh the page — timer continues running</li>
               <li>• Your answers are final once submitted</li>
-              <li>• Camera access is required for proctoring throughout the test</li>
+              <li>• Camera access is required throughout the test</li>
               <li>• Violations may result in automatic submission</li>
             </ul>
           </div>

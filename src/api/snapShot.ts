@@ -2,19 +2,12 @@ import { request } from "./http"
 import { normalizeApiError } from "./apiHelper"
 import { API_ENDPOINTS } from "../constants/apiEndpoints"
 
-// ─── Supabase public storage base URL ────────────────────────────────────────
-// Bucket is set to PUBLIC in Supabase dashboard (Storage → snapshots → Edit → Public ON)
-// ImagePath stored in DB is a relative path, e.g.:
-//   91dd511f-.../bbd88fa1-.../1774931795088.jpg
-// We prepend this constant to get a directly loadable URL.
 const SUPABASE_SNAPSHOT_BASE =
   "https://rlyivurdqnitvjwqqgph.supabase.co/storage/v1/object/public/snapshots/"
 
-/** Converts a raw DB path to a full public URL.
- *  If the value is already a full URL (starts with http) it is returned as-is. */
 const toPublicUrl = (path: string): string => {
   if (!path) return ""
-  if (path.startsWith("http")) return path          // already a full URL
+  if (path.startsWith("http")) return path         
   return SUPABASE_SNAPSHOT_BASE + path
 }
 
@@ -29,7 +22,7 @@ export interface SnapshotRecord {
   id:          string
   testId:      string
   applicantId: string
-  imageUrl:    string   // always a full public URL after normalization
+  imageUrl:    string   
   capturedAt:  string
 }
 

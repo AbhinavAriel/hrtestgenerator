@@ -126,6 +126,7 @@ export default function HrTestReportView({
   const questions  = report.questions  ?? report.Questions  ?? []
   const techStacks = report.techStacks ?? report.TechStacks ?? []
   const isPassed   = report.isPassed   ?? report.IsPassed   ?? false
+  const isRejected = report.isRejected ?? report.IsRejected ?? false
 
   return (
     <div className="rounded-b-2xl rounded-tr-2xl border border-t-0 border-gray-200 bg-white p-6 shadow-2xl">
@@ -145,11 +146,13 @@ export default function HrTestReportView({
               {report.status ?? report.Status ?? "-"}
             </span>
             <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${
-              isPassed
+              isRejected
+                ? "bg-orange-100 text-orange-700 border border-orange-200"
+                : isPassed
                 ? "bg-green-100 text-green-700 border border-green-200"
                 : "bg-red-100 text-red-700 border border-red-200"
             }`}>
-              {isPassed ? "Passed" : "Failed"}
+              {isRejected ? "Rejected" : isPassed ? "Passed" : "Failed"}
             </span>
           </div>
         </div>

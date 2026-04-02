@@ -6,23 +6,14 @@ interface CameraPreviewProps {
   snapshotCount: number;
 }
 
-/**
- * A small floating preview that sits in the bottom-right corner of
- * the assessment screen. It shows the live webcam feed when active,
- * or a status badge when the camera is unavailable.
- *
- * Keep it unobtrusive — the candidate must be able to see it but it
- * should not distract from the questions.
- */
 export default function CameraPreview({
   videoRef,
   status,
   snapshotCount,
 }: CameraPreviewProps) {
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-1.5">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-1.5" style={{ visibility: "hidden", pointerEvents: "none" }}>
 
-      {/* ── Video or status placeholder ───────────────────────────────── */}
       <div className="relative w-36 h-28 rounded-xl overflow-hidden border border-gray-300 bg-gray-900 shadow-xl">
 
         {/* Live feed */}
@@ -36,7 +27,6 @@ export default function CameraPreview({
           }`}
         />
 
-        {/* Overlay shown when not active */}
         {status !== "active" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-2 text-center">
             <StatusIcon status={status} />
@@ -55,13 +45,6 @@ export default function CameraPreview({
         )}
       </div>
 
-      {/* ── Snapshot counter ─────────────────────────────────────────────── */}
-      {status === "active" && (
-        <span className="text-[10px] text-gray-500 leading-none">
-          {snapshotCount} snapshot{snapshotCount !== 1 ? "s" : ""} taken
-        </span>
-      )}
-
       {/* ── Denied / error warning pill ──────────────────────────────────── */}
       {(status === "denied" || status === "error") && (
         <span className="rounded-full bg-amber-100 border border-amber-200 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700">
@@ -71,8 +54,6 @@ export default function CameraPreview({
     </div>
   );
 }
-
-// ─── helpers ─────────────────────────────────────────────────────────────────
 
 function statusLabel(
   status: "idle" | "requesting" | "active" | "denied" | "error"

@@ -83,12 +83,14 @@ export default function HrTableRow({ row, onEdit, onDelete, onRowClick }: Props)
         {isSubmitted ? (
           <span
             className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-              row.isPassed
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
+              row.isRejected
+                ? "bg-orange-100 text-orange-700"
+                : row.isPassed
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
             }`}
           >
-            {row.isPassed ? "Passed" : "Failed"}
+            {row.isRejected ? "Rejected" : row.isPassed ? "Passed" : "Failed"}
           </span>
         ) : "-"}
       </td>

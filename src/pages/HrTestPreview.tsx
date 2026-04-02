@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import toast from "react-hot-toast"
-import { getHrTestReport } from "../api/hrApi"
+import { getHrTestReport, rejectHrTest } from "../api/hrApi"
 import { getSnapshots, SnapshotRecord } from "../api/snapShot"
 import type { HrTestReport as BaseReport, ReportQuestion, ReportOption } from "../types/report"
 import { pillClass } from "../utils/hrHelpers"
@@ -17,6 +17,8 @@ type HrTestReport = BaseReport & {
   ScorePercentage?: number
   isPassed?: boolean
   IsPassed?: boolean
+  isRejected?: boolean
+  IsRejected?: boolean
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -299,10 +301,28 @@ export default function HrTestPreview() {
   const [report,           setReport]       = useState<HrTestReport | null>(null)
   const [snapshots,        setSnapshots]    = useState<SnapshotRecord[]>([])
   const [loadingSnapshots, setLoadingSnaps] = useState(false)
+  const [isRejected,       setIsRejected]   = useState(false)
+  const [rejecting,        setRejecting]    = useState(false)
+  const [showRejectModal,  setShowRejectModal] = useState(false)
 
   const goBack = () => {
     if (window.history.length > 1) { navigate(-1); return }
     navigate("/admin", { replace: true })
+  }
+
+  const handleRejectConfirm = async () => {
+    if (!testId) return
+    try {
+      setRejecting(true)
+      await rejectHrTest(testId)
+      setIsRejected(true)
+      setShowRejectModal(false)
+      toast.success("Candidate result has been rejected.")
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to reject the result.")
+    } finally {
+      setRejecting(false)
+    }
   }
 
   useEffect(() => {
@@ -326,9 +346,11 @@ export default function HrTestPreview() {
           const outer = raw?.data ?? raw
           const r: HrTestReport = outer?.isSuccess !== undefined ? outer.data : outer
           setReport(r)
+          setIsRejected(r?.isRejected ?? r?.IsRejected ?? false)
         } else {
           toast.error((res as PromiseRejectedResult).reason?.message || "Failed to load report")
         }
+        
 
         if (snaps.status === "fulfilled") {
           setSnapshots((snaps.value as SnapshotRecord[]) ?? [])
@@ -383,12 +405,20 @@ export default function HrTestPreview() {
                 {report.status ?? report.Status ?? "-"}
               </span>
               <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                isPassed
+                (isPassed && !isRejected)
                   ? "bg-green-100 text-green-700 border border-green-200"
                   : "bg-red-100 text-red-700 border border-red-200"
               }`}>
-                {isPassed ? "Passed" : "Failed"}
+                {isRejected ? "Rejected" : isPassed ? "Passed" : "Failed"}
               </span>
+              {isPassed && !isRejected && (
+                <button
+                  onClick={() => setShowRejectModal(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full cursor-pointer px-3 py-1 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white border border-red-700 transition"
+                >
+                  ✕ Reject Result
+                </button>
+              )}
             </div>
           </div>
 
@@ -432,6 +462,50 @@ export default function HrTestPreview() {
         <SnapshotGallery snapshots={snapshots} loading={loadingSnapshots} />
 
       </div>
+
+      {/* ── Reject confirmation modal ── */}
+      {showRejectModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => !rejecting && setShowRejectModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              </div>
+              <h3 className="text-base font-bold text-gray-900">Reject Candidate Result?</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-5">
+              This will override the <span className="font-semibold text-green-700">Passed</span> result
+              and mark the candidate as <span className="font-semibold text-red-700">Rejected</span>. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                disabled={rejecting}
+                onClick={() => setShowRejectModal(false)}
+                className="px-4 py-2 text-sm rounded-lg cursor-pointer border border-gray-300 text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={rejecting}
+                onClick={handleRejectConfirm}
+                className="px-4 py-2 text-sm rounded-lg cursor-pointer bg-red-600 hover:bg-red-700 text-white font-semibold transition disabled:opacity-60"
+              >
+                {rejecting ? "Rejecting..." : "Yes, Reject"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

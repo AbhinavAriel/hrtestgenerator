@@ -1,10 +1,3 @@
-/**
- * questionsApi.ts
- *
- * Fetches and creates assessment questions.
- * No logic changes from original — only import paths verified.
- */
-
 import { request } from "./http"
 import { unwrap, normalizeApiError } from "./apiHelper"
 import { API_ENDPOINTS } from "../constants/apiEndpoints"

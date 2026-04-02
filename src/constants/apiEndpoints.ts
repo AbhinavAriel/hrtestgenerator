@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
     TEST_BY_TOKEN: (token: string) => `api/Hr/tests/by-token/${token}`,
     SUBMIT: (id: string) => `api/Hr/tests/${id}/submit`,
     REPORT: (id: string) => `api/Hr/tests/${id}/report`,
+    REJECT: (id: string) => `api/Hr/tests/${id}/reject`,
   },
 
   QUESTIONS: {

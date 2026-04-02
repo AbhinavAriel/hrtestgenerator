@@ -88,3 +88,11 @@ export const submitHrTest = (testId: string): Promise<void> => {
 export const getHrTestReport = (testId: string): Promise<any> => {
   return request<any>(API_ENDPOINTS.HR.REPORT(testId))
 }
+
+// ─── Reject (admin override for suspicious passed result) ─────────────────────
+
+export const rejectHrTest = (testId: string): Promise<void> => {
+  return request<void>(API_ENDPOINTS.HR.REJECT(testId), {
+    method: "PATCH",
+  })
+}
