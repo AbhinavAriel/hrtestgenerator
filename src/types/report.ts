@@ -39,8 +39,10 @@ export interface HrTestReport {
   ScorePercentage?: number
   isPassed?: boolean
   IsPassed?: boolean
-  isRejected?: boolean     
-  IsRejected?: boolean 
+  isRejected?: boolean
+  IsRejected?: boolean
+  cancellationReason?: string   // reason stored when admin cancels result
+  CancellationReason?: string
   applicantName?: string
   ApplicantName?: string
   email?: string
@@ -62,4 +64,6 @@ export interface HrTestReport {
 export interface HrTestReportViewProps {
   report?: HrTestReport | null
   loading?: boolean
+  /** Called after admin successfully cancels the result — parent can refresh data */
+  onCancelResult?: (testId: string, reason: string) => Promise<void>
 }

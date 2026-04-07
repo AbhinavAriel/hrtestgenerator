@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { useHrData } from "../hooks/useHrData"
 import { useHrTabs } from "../hooks/useHrTabs"
@@ -35,7 +35,8 @@ export default function HrCreateTest() {
     totalPages,
     totalCount,
     pageSize,
-    goToPage
+    goToPage,
+    loadTests,
   } = useHrData()
 
   const {
@@ -43,16 +44,14 @@ export default function HrCreateTest() {
     setActiveTab,
     openTabs,
     openTab,
-    closeTab
+    closeTab,
+    updateTabReport,
   } = useHrTabs()
 
   const handleLogout = () => {
-
     sessionStorage.removeItem("hr_open_tabs")
     sessionStorage.removeItem("hr_active_tab")
-
     logoutAdmin()
-
     navigate("/admin-login", { replace: true })
   }
 
@@ -60,6 +59,28 @@ export default function HrCreateTest() {
     () => openTabs.find((x) => x.key === activeTab) || null,
     [openTabs, activeTab]
   )
+
+  /**
+   * Called by HrTestReportView after the admin successfully cancels a result.
+   *
+   * Two things must happen in sync:
+   *   1. Patch the tab's cached report so the tab badge/banner updates immediately
+   *      without needing a re-fetch.
+   *   2. Reload the current table page so the "Result" column in the row reflects
+   *      the new "Cancelled" / rejected state right away.
+   */
+  const handleCancelResult = useCallback(async (testId: string, reason: string) => {
+    // 1. Patch the in-memory tab report — isRejected + cancellationReason
+    updateTabReport(testId, {
+      isRejected: true,
+      IsRejected: true,
+      cancellationReason: reason,
+      CancellationReason: reason,
+    })
+
+    // 2. Re-fetch the current table page to update the row's Result badge
+    await loadTests(page)
+  }, [updateTabReport, loadTests, page])
 
   return (
     <div className="min-h-screen bg-blue-50">
@@ -153,7 +174,6 @@ export default function HrCreateTest() {
                     : "bg-blue-100 text-blue-700 hover:bg-blue-200"
                 }`}
               >
-
                 <button onClick={() => setActiveTab(tab.key)} className="cursor-pointer">
                   {tab.label}
                 </button>
@@ -164,7 +184,6 @@ export default function HrCreateTest() {
                 >
                   ✕
                 </button>
-
               </div>
             ))}
 
@@ -190,6 +209,7 @@ export default function HrCreateTest() {
             <HrTestReportView
               report={activeTabData?.report}
               loading={activeTabData?.loading}
+              onCancelResult={handleCancelResult}
             />
 
           )}

@@ -22,7 +22,6 @@ export function useHrTabs() {
   const setOpenTabs = useCallback((updater: (prev: HrReportTab[]) => HrReportTab[]) => {
     setOpenTabsState((prev) => {
       const next = updater(prev)
-      
       const toStore = next.map(({ key, label, report }) => ({ key, label, loading: false, report }))
       sessionStorage.setItem("hr_open_tabs", JSON.stringify(toStore))
       return next
@@ -52,7 +51,6 @@ export function useHrTabs() {
     try {
 
       const res: any = await getHrTestReport(testId)
-      
       const outer = res?.data ?? res
       const report = outer?.isSuccess !== undefined ? outer.data : outer
 
@@ -92,11 +90,22 @@ export function useHrTabs() {
 
   }, [activeTab])
 
+  const updateTabReport = useCallback((testId: string, patch: Record<string, any>) => {
+    setOpenTabs((prev) =>
+      prev.map((tab) =>
+        tab.key === testId && tab.report
+          ? { ...tab, report: { ...tab.report, ...patch } }
+          : tab
+      )
+    )
+  }, [setOpenTabs])
+
   return {
     activeTab,
     setActiveTab,
     openTabs,
     openTab,
     closeTab,
+    updateTabReport,
   }
 }

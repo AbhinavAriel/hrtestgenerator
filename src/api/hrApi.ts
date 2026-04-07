@@ -91,8 +91,9 @@ export const getHrTestReport = (testId: string): Promise<any> => {
 
 // ─── Reject (admin override for suspicious passed result) ─────────────────────
 
-export const rejectHrTest = (testId: string): Promise<void> => {
+export const rejectHrTest = (testId: string, cancellationReason: string): Promise<void> => {
   return request<void>(API_ENDPOINTS.HR.REJECT(testId), {
     method: "PATCH",
+    data: { cancellationReason },
   })
 }

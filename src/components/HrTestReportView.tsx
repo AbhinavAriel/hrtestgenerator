@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react"
+import toast from "react-hot-toast"
 import { HrTestReportViewProps } from "../types/report"
 import { pillClass } from "../utils/hrHelpers"
 import { getSnapshots, SnapshotRecord } from "../api/snapShot"
+import { rejectHrTest } from "../api/hrApi"
+import CancelResultModal from "./CancelResultModal"
+
 
 function SnapshotGallery({
   snapshots,
@@ -63,11 +67,7 @@ function SnapshotGallery({
             className="relative max-w-2xl w-full rounded-xl overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={selected.imageUrl}
-              alt="Snapshot"
-              className="w-full"
-            />
+            <img src={selected.imageUrl} alt="Snapshot" className="w-full" />
             <div className="bg-white px-4 py-2 text-xs text-gray-600 flex justify-between items-center">
               <span>Captured: {new Date(selected.capturedAt).toLocaleString()}</span>
               <button
@@ -84,17 +84,29 @@ function SnapshotGallery({
   )
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function HrTestReportView({
   report,
   loading = false,
+  onCancelResult,
 }: HrTestReportViewProps) {
 
   const [snapshots, setSnapshots] = useState<SnapshotRecord[]>([])
   const [loadingSnapshots, setLoadingSnapshots] = useState(false)
+  const [isRejected, setIsRejected] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [localCancelReason, setLocalCancelReason] = useState<string | null>(null)
 
   const testId = report?.testId ?? report?.TestId
 
+  // ── Sync isRejected from report prop (tab switches / refreshes) ──
+  useEffect(() => {
+    setIsRejected(report?.isRejected ?? report?.IsRejected ?? false)
+  }, [report?.isRejected, report?.IsRejected])
+
+  // ── Load snapshots whenever testId changes ──
   useEffect(() => {
     if (!testId) return
 
@@ -115,6 +127,40 @@ export default function HrTestReportView({
     return () => { mounted = false }
   }, [testId])
 
+  useEffect(() => {
+    if (report?.cancellationReason || report?.CancellationReason) {
+      setLocalCancelReason(
+        report.cancellationReason ?? report.CancellationReason ?? null
+      )
+    }
+  }, [report?.cancellationReason, report?.CancellationReason])
+
+  // ── Handle cancel confirmation ──
+  const handleCancelConfirm = async (reason: string) => {
+    if (!testId) return
+    try {
+      setCancelling(true)
+
+      await rejectHrTest(String(testId), reason)
+
+      // ✅ update local UI immediately
+      setIsRejected(true)
+      setLocalCancelReason(reason)
+
+      setShowCancelModal(false)
+      toast.success("Candidate result has been cancelled.")
+
+      // ✅ notify parent (table refresh etc.)
+      await onCancelResult?.(String(testId), reason)
+
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to cancel the result.")
+    } finally {
+      setCancelling(false)
+    }
+  }
+
+  // ── Early returns (after all hooks) ──
   if (loading) {
     return <div className="p-6 text-gray-600">Loading report...</div>
   }
@@ -123,14 +169,26 @@ export default function HrTestReportView({
     return <div className="p-6 text-gray-600">No report found.</div>
   }
 
-  const questions  = report.questions  ?? report.Questions  ?? []
+  const questions = report.questions ?? report.Questions ?? []
   const techStacks = report.techStacks ?? report.TechStacks ?? []
-  const isPassed   = report.isPassed   ?? report.IsPassed   ?? false
-  const isRejected = report.isRejected ?? report.IsRejected ?? false
+  const isPassed = report.isPassed ?? report.IsPassed ?? false
 
+  const status = (report.status ?? report.Status ?? "").toLowerCase()
+  const isSubmitted = status === "submitted"
+
+  // Cancel button shows for every submitted, not-yet-cancelled test
+  const showCancelBtn = isSubmitted && !isRejected
+
+  // Cancellation reason stored on report (returned by API after re-fetch)
+  const cancellationReason =
+    localCancelReason ??
+    report.cancellationReason ??
+    report.CancellationReason ??
+    null
   return (
     <div className="rounded-b-2xl rounded-tr-2xl border border-t-0 border-gray-200 bg-white p-6 shadow-2xl">
 
+      {/* ── Header card ── */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xl">
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -141,39 +199,69 @@ export default function HrTestReportView({
             </p>
           </div>
 
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-wrap gap-2 items-center">
+            {/* Status badge */}
             <span className="inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold capitalize">
               {report.status ?? report.Status ?? "-"}
             </span>
-            <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${
-              isRejected
-                ? "bg-orange-100 text-orange-700 border border-orange-200"
-                : isPassed
+
+            {/* Pass / Fail / Cancelled badge */}
+            <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${isRejected
+              ? "bg-orange-100 text-orange-700 border border-orange-200"
+              : isPassed
                 ? "bg-green-100 text-green-700 border border-green-200"
                 : "bg-red-100 text-red-700 border border-red-200"
-            }`}>
-              {isRejected ? "Rejected" : isPassed ? "Passed" : "Failed"}
+              }`}>
+              {isRejected ? "Cancelled" : isPassed ? "Passed" : "Failed"}
             </span>
+
+            {/* Cancel Result button — visible for all submitted, non-cancelled tests */}
+            {showCancelBtn && (
+              <button
+                onClick={() => setShowCancelModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-full cursor-pointer px-3 py-1
+                  text-xs font-semibold bg-red-600 hover:bg-red-700 text-white border border-red-700 transition"
+              >
+                ✕ Cancel Result
+              </button>
+            )}
           </div>
         </div>
 
+        {/* Cancellation reason banner (shown after cancelling or if already cancelled) */}
+        {isRejected && cancellationReason && (
+          <div className="mt-3 flex items-start gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
+            <svg className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z" />
+            </svg>
+            <div>
+              <p className="text-xs font-semibold text-orange-700">Cancellation Reason</p>
+              <p className="text-xs text-orange-600 mt-0.5">{cancellationReason}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Stats */}
         <div className="grid grid-cols-3 sm:grid-cols-4 mt-4 gap-3">
           <StatCard label="Total Questions" value={report.totalQuestions ?? report.TotalQuestions ?? 0} color="yellow" />
-          <StatCard label="Duration"        value={`${report.durationMinutes ?? report.DurationMinutes ?? 0} min`} color="blue" />
-          <StatCard label="Answered"        value={report.answeredCount ?? report.AnsweredCount ?? 0} color="red" />
-          <StatCard label="Correct"         value={report.correctCount  ?? report.CorrectCount  ?? 0} color="green" />
+          <StatCard label="Duration" value={`${report.durationMinutes ?? report.DurationMinutes ?? 0} min`} color="blue" />
+          <StatCard label="Answered" value={report.answeredCount ?? report.AnsweredCount ?? 0} color="red" />
+          <StatCard label="Correct" value={report.correctCount ?? report.CorrectCount ?? 0} color="green" />
         </div>
 
+        {/* Candidate info */}
         <div className="mt-5">
           <div className="text-sm text-gray-800 mb-2">Candidate</div>
           <div className="grid grid-cols-4 w-full">
-            <CandidateField label="name"  value={report.applicantName ?? report.ApplicantName} />
-            <CandidateField label="email" value={report.email         ?? report.Email} />
-            <CandidateField label="phone" value={report.phoneNumber   ?? report.PhoneNumber} />
+            <CandidateField label="name" value={report.applicantName ?? report.ApplicantName} />
+            <CandidateField label="email" value={report.email ?? report.Email} />
+            <CandidateField label="phone" value={report.phoneNumber ?? report.PhoneNumber} />
             <CandidateField label="score" value={report.scorePercentage ?? report.ScorePercentage} />
           </div>
         </div>
 
+        {/* Tech stacks */}
         <div className="mt-4 flex flex-wrap gap-2">
           {techStacks.map((t) => (
             <span
@@ -187,7 +275,7 @@ export default function HrTestReportView({
 
       </div>
 
-      {/* Questions */}
+      {/* ── Questions ── */}
       <div className="mt-6 space-y-4">
         {questions.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600">
@@ -195,21 +283,20 @@ export default function HrTestReportView({
           </div>
         ) : (
           questions.map((q) => {
-            const questionId  = q.questionId ?? q.QuestionId
-            const order       = q.order      ?? q.Order
-            const text        = q.text       ?? q.Text
-            const selectedId  = q.selectedOptionId ?? q.SelectedOptionId
-            const correctId   = q.correctOptionId  ?? q.CorrectOptionId
-            const isCorrect   = q.isCorrect  ?? q.IsCorrect
-            const options     = q.options    ?? q.Options ?? []
+            const questionId = q.questionId ?? q.QuestionId
+            const order = q.order ?? q.Order
+            const text = q.text ?? q.Text
+            const selectedId = q.selectedOptionId ?? q.SelectedOptionId
+            const correctId = q.correctOptionId ?? q.CorrectOptionId
+            const isCorrect = q.isCorrect ?? q.IsCorrect
+            const options = q.options ?? q.Options ?? []
 
             return (
               <div key={questionId} className="rounded-xl border border-gray-200 p-4 bg-white shadow-md">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">Question {order}</h3>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    isCorrect ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${isCorrect ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                    }`}>
                     {selectedId ? (isCorrect ? "correct" : "wrong") : "skipped"}
                   </span>
                 </div>
@@ -218,16 +305,16 @@ export default function HrTestReportView({
 
                 <div className="mt-4 grid lg:grid-cols-2 gap-4">
                   {options.map((opt) => {
-                    const optId       = opt.id   ?? opt.Id
-                    const optText     = opt.text  ?? opt.Text
-                    const isSelected  = selectedId && optId === selectedId
+                    const optId = opt.id ?? opt.Id
+                    const optText = opt.text ?? opt.Text
+                    const isSelected = selectedId && optId === selectedId
                     const isCorrectOpt = correctId && optId === correctId
 
                     return (
                       <div
                         key={optId}
                         className={`rounded-lg border px-4 py-2 text-sm flex items-center justify-between
-                          ${isSelected   ? "border-blue-500 bg-blue-50" : "border-gray-200"}
+                          ${isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"}
                           ${isCorrectOpt ? "border-green-500" : ""}`}
                       >
                         <span className="text-gray-800">{optText}</span>
@@ -253,8 +340,14 @@ export default function HrTestReportView({
         )}
       </div>
 
-      {/* Proctoring Snapshots */}
       <SnapshotGallery snapshots={snapshots} loading={loadingSnapshots} />
+
+      <CancelResultModal
+        open={showCancelModal}
+        submitting={cancelling}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleCancelConfirm}
+      />
 
     </div>
   )
@@ -269,9 +362,9 @@ function StatCard({ label, value, color }: {
 }) {
   const colors: Record<string, string> = {
     yellow: "border-yellow-100 bg-yellow-50",
-    blue:   "border-blue-100   bg-blue-50",
-    red:    "border-red-100    bg-red-50",
-    green:  "border-green-100  bg-green-50",
+    blue: "border-blue-100   bg-blue-50",
+    red: "border-red-100    bg-red-50",
+    green: "border-green-100  bg-green-50",
     purple: "border-purple-100 bg-purple-50",
   }
   return (
