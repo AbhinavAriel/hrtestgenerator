@@ -49,7 +49,7 @@ export default function Modal({
             <button
               onClick={onClose}
               disabled={disableClose}
-              className="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              className="rounded-md p-1 text-gray-500 cursor-pointer hover:bg-gray-100 hover:text-gray-700"
             >
               ✕
             </button>

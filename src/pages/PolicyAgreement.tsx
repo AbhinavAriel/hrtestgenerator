@@ -254,7 +254,7 @@ export default function PolicyAgreement() {
           {/* Explanation card */}
           <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 mb-5">
             <p className="text-sm text-blue-800 font-medium mb-1">
-              This assessment requires camera access for proctoring.
+              This assessment requires camera access through out the test.
             </p>
             <p className="text-xs text-blue-600">
               When you click "Allow Access", your browser will show a permission
