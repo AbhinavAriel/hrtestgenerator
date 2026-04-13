@@ -24,7 +24,7 @@ export default function AdminLogin() {
               <img src={Logo} alt="logo" className="max-w-50 mt-5" />
 
               <h1 className="mt-6 text-4xl font-bold leading-tight">
-                create tests and review candidate submissions.
+                Create tests and review candidate submissions.
               </h1>
             </div>
           </div>

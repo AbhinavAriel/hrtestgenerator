@@ -53,7 +53,7 @@ export default function HrTable({
             <tr className="border-b border-gray-300 text-center">
               <th className="px-3 py-3">S.No</th>
               <th className="px-6 py-3">Candidate</th>
-              <th className="px-6 py-3">Level</th>
+              {/* <th className="px-6 py-3">Level</th> */}
               <th className="px-6 py-3">Questions</th>
               <th className="px-6 py-3">Duration</th>
               <th className="px-6 py-3">Status</th>

@@ -13,6 +13,7 @@ import { onlyDigits } from "../lib/hrUtils"
 import { normalizeRow } from "../lib/hrNormalizer"
 import { readPaged } from "../lib/readPaged"
 import { DEFAULT_FORM } from "../constants/hrConstants"
+import { validateCreateTestForm } from "../lib/notify"
 
 import { HrForm, HrMeta, HrRow, FormErrors } from "../types/hr"
 
@@ -42,35 +43,18 @@ export function useHrData() {
     setForm((p) => ({ ...p, [key]: value }))
   }
 
+  // ── Validation ────────────────────────────────────────────────
   const validate = () => {
-
-    const next: FormErrors = {}
-    const phone = onlyDigits(form.phoneNumber)
-
-    if (!form.firstName.trim()) next.firstName = "First name required"
-    if (!form.lastName.trim()) next.lastName = "Last name required"
-    if (!form.email.trim()) next.email = "Email required"
-
-    if (!phone) next.phoneNumber = "Phone required"
-    else if (phone.length !== 10)
-      next.phoneNumber = "Enter valid 10 digit phone"
-
+    const next = validateCreateTestForm(form)
     setErrors(next)
-
     return Object.keys(next).length === 0
   }
 
+  // ── Load tests ────────────────────────────────────────────────
   const loadTests = useCallback(async (targetPage = 1) => {
-
     setLoadingTable(true)
-
     try {
-
-      const res = await getHrTests({
-        page: targetPage,
-        pageSize,
-      })
-
+      const res = await getHrTests({ page: targetPage, pageSize })
       const paged = readPaged(res?.data ?? res)
 
       if (paged) {
@@ -86,184 +70,152 @@ export function useHrData() {
         setTotalPages(1)
         setTotalCount(res.length)
       }
-
     } catch (e: any) {
-
       toast.error(e?.message || "Failed to load tests")
-
     } finally {
-
       setLoadingTable(false)
-
     }
-
   }, [pageSize])
 
+  // ── Create / Update ────────────────────────────────────────────
   const handleCreate = async (e: React.FormEvent) => {
-
     e.preventDefault()
-
     if (submitting || !validate()) return
 
     try {
-
       setSubmitting(true)
 
+      // Build the per-tech payload the backend now expects
+      const techStacksPayload = form.techStacks.map((t) => ({
+        techStackId: t.id,
+        level: t.level,
+      }))
+
       const payload = {
-        fullName: `${form.firstName} ${form.lastName}`,
+        fullName: `${form.firstName} ${form.lastName}`.trim(),
         email: form.email.trim().toLowerCase(),
         phoneNumber: onlyDigits(form.phoneNumber),
         totalQuestions: Number(form.totalQuestions),
         durationMinutes: Number(form.durationMinutes),
-        level: form.level,
-        techStackIds: form.techStackIds,
+        techStacks: techStacksPayload,
       }
 
       if (editRow?.testId) {
-
         await updateHrTest(String(editRow.testId), payload)
         toast.success("Test updated successfully")
-
       } else {
-
         await createHrTest(payload)
         toast.success("Test created successfully")
-
       }
 
       setOpenCreate(false)
-
       await loadTests(page)
-
     } catch (e: any) {
-
       toast.error(e?.message || "Operation failed")
-
     } finally {
-
       setSubmitting(false)
-
     }
-
   }
 
+  // ── Modal helpers ──────────────────────────────────────────────
   const openCreateModal = () => {
-
     setEditRow(null)
     setForm(DEFAULT_FORM)
     setErrors({})
     setOpenCreate(true)
-
   }
 
-  const closeCreateModal = () => {
-    setOpenCreate(false)
-  }
+  const closeCreateModal = () => setOpenCreate(false)
 
+  // ── Edit ────────────────────────────────────────────────────────
   const handleEdit = (row: HrRow) => {
-
     setEditRow(row)
 
     const names = (row.applicantName || "").split(" ")
 
-    // ✅ FIX: map tech stack names → GUIDs using techOptionsNormalized
-    const resolvedTechIds = (row.techStacks || [])
-      .map((name) => {
-        const match = techOptionsNormalized.find(
-          (o) => o.label.toLowerCase() === String(name).toLowerCase()
-        )
-        return match?.value ?? ""
-      })
-      .filter(Boolean)
+    // Restore per-tech selections from the row's techStackLevels field
+    const techStackLevels = row.techStackLevels ?? row.TechStackLevels ?? []
+
+    const restoredTechStacks = techStackLevels
+      .map((tsl) => ({
+        id: String(tsl.id ?? ""),
+        level: String(tsl.level ?? "Beginner"),
+      }))
+      .filter((t) => t.id)
+
+    // Fallback: if techStackLevels is empty but we have techOptionsNormalized,
+    // try to match by name so older rows (pre-migration) still open sensibly
+    const fallbackTechStacks =
+      restoredTechStacks.length === 0
+        ? (row.techStacks ?? [])
+            .map((name) => {
+              const match = techOptionsNormalized.find(
+                (o) => o.label.toLowerCase() === String(name).toLowerCase()
+              )
+              return match ? { id: match.value, level: "Beginner" } : null
+            })
+            .filter(Boolean) as { id: string; level: string }[]
+        : restoredTechStacks
 
     setForm({
       ...DEFAULT_FORM,
       firstName: names[0] || "",
-      lastName: names.slice(1).join(" ") || "",   
+      lastName: names.slice(1).join(" ") || "",
       email: row.email || "",
       phoneNumber: row.phoneNumber || "",
       totalQuestions: String(row.totalQuestions || ""),
       durationMinutes: String(row.durationMinutes || ""),
-      level: row.level || "",
-      techStackIds: resolvedTechIds,           
+      techStacks: fallbackTechStacks,
     })
 
     setOpenCreate(true)
-
   }
 
+  // ── Delete ──────────────────────────────────────────────────────
   const handleDeleteClick = (row: HrRow) => {
     setDeleteRow(row)
     setOpenDelete(true)
   }
 
   const confirmDelete = async () => {
-
     if (!deleteRow) return
-
     try {
-
       setSubmitting(true)
-
       await deleteHrTest(String(deleteRow.testId))
-
       toast.success("Test deleted")
-
       setOpenDelete(false)
-
       await loadTests(page)
-
     } catch (e: any) {
-
       toast.error(e?.message || "Delete failed")
-
     } finally {
-
       setSubmitting(false)
-
     }
-
   }
 
+  // ── Pagination ──────────────────────────────────────────────────
   const goToPage = (p: number) => {
-
     if (p === page) return
-
     loadTests(p)
-
   }
 
+  // ── Boot ────────────────────────────────────────────────────────
   useEffect(() => {
-
     async function loadMeta() {
-
       try {
-
         const m = await getHrMeta()
-
         setMeta({
           levels: m?.levels ?? [],
           techStacks: m?.techStacks ?? [],
         })
-
         await loadTests(1)
-
       } catch (e: any) {
-
         toast.error(e?.message || "Failed loading meta")
-
       }
-
     }
-
     loadMeta()
-
   }, [loadTests])
 
-  /**
-   * FIXED: Normalize tech stack options
-   * MultiSelectDropdown expects { value, label }
-   */
+  // ── Normalized tech options for MultiSelectDropdown ─────────────
   const techOptionsNormalized = useMemo(() => {
     return (meta.techStacks || [])
       .map((x: any) => ({

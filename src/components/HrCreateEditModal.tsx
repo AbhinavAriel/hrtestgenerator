@@ -3,12 +3,9 @@ import Field from "./ui/Field"
 import MultiSelectDropdown from "./MultiSelectDropdown"
 
 import { onlyDigits } from "../lib/hrUtils"
-import { HrCreateEditModalProps, Option } from "../types/hr"
-
-import {
-  normalizeLevelOptions,
-  normalizeTechOptions,
-} from "../utils/hrOptionHelpers"
+import { HrCreateEditModalProps, HrTechStackEntry, Option } from "../types/hr"
+import { LEVELS } from "../constants/hrConstants"
+import { normalizeLevelOptions, normalizeTechOptions } from "../utils/hrOptionHelpers"
 
 export default function HrCreateEditModal({
   open,
@@ -22,18 +19,35 @@ export default function HrCreateEditModal({
   techOptionsNormalized,
   onSubmit,
 }: HrCreateEditModalProps) {
-
-  const levelOptions: Option[] = normalizeLevelOptions(meta?.levels)
-
   const techOptions: Option[] = normalizeTechOptions(techOptionsNormalized)
 
   const isSubmitted = (editRow?.status ?? "").toLowerCase() === "submitted"
 
-  const removeSpaces = (value: string) =>
-    value.replace(/\s+/g, "")
+  const removeSpaces = (value: string) => value.replace(/\s+/g, "")
 
   const inputStyle =
     "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+
+  // ── Selected tech IDs (for the MultiSelectDropdown value) ──
+  const selectedTechIds = form.techStacks.map((t) => t.id)
+
+  // ── When the multi-select changes, sync form.techStacks ──
+  // New IDs → add with default level; removed IDs → drop
+  const handleTechChange = (newIds: string[]) => {
+    const updated: HrTechStackEntry[] = newIds.map((id) => {
+      const existing = form.techStacks.find((t) => t.id === id)
+      return existing ?? { id, level: "Beginner" }
+    })
+    setField("techStacks", updated)
+  }
+
+  // ── Update level for a single tech entry ──
+  const handleLevelChange = (techId: string, level: string) => {
+    const updated = form.techStacks.map((t) =>
+      t.id === techId ? { ...t, level } : t
+    )
+    setField("techStacks", updated)
+  }
 
   return (
     <Modal
@@ -46,7 +60,7 @@ export default function HrCreateEditModal({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
-          {/* Candidate section */}
+          {/* ── Candidate section ── */}
           <div className="sm:col-span-2">
             <p className="text-xs font-bold tracking-wide text-gray-700">
               CANDIDATE DETAILS
@@ -56,9 +70,7 @@ export default function HrCreateEditModal({
           <Field label="First Name" error={errors.firstName}>
             <input
               value={form.firstName}
-              onChange={(e) =>
-                setField("firstName", removeSpaces(e.target.value))
-              }
+              onChange={(e) => setField("firstName", removeSpaces(e.target.value))}
               className={inputStyle}
               placeholder="e.g. John"
               disabled={submitting}
@@ -68,9 +80,7 @@ export default function HrCreateEditModal({
           <Field label="Last Name" error={errors.lastName}>
             <input
               value={form.lastName}
-              onChange={(e) =>
-                setField("lastName", removeSpaces(e.target.value))
-              }
+              onChange={(e) => setField("lastName", removeSpaces(e.target.value))}
               className={inputStyle}
               placeholder="e.g. Doe"
               disabled={submitting}
@@ -91,9 +101,7 @@ export default function HrCreateEditModal({
           <Field label="Phone Number" hint="10 digits" error={errors.phoneNumber}>
             <input
               value={form.phoneNumber}
-              onChange={(e) =>
-                setField("phoneNumber", onlyDigits(e.target.value))
-              }
+              onChange={(e) => setField("phoneNumber", onlyDigits(e.target.value))}
               inputMode="numeric"
               className={inputStyle}
               placeholder="e.g. 9876543210"
@@ -102,7 +110,7 @@ export default function HrCreateEditModal({
             />
           </Field>
 
-          {/* Test section */}
+          {/* ── Test section ── */}
           <div className="sm:col-span-2 pt-4 border-t border-dashed border-gray-300">
             <p className="text-xs font-bold tracking-wide text-gray-700">
               TEST DETAILS
@@ -112,9 +120,7 @@ export default function HrCreateEditModal({
           <Field label="Total Questions" error={errors.totalQuestions}>
             <input
               value={form.totalQuestions}
-              onChange={(e) =>
-                setField("totalQuestions", e.target.value)
-              }
+              onChange={(e) => setField("totalQuestions", e.target.value)}
               inputMode="numeric"
               className={inputStyle}
               disabled={submitting || isSubmitted}
@@ -124,59 +130,86 @@ export default function HrCreateEditModal({
           <Field label="Duration" hint="minutes" error={errors.durationMinutes}>
             <input
               value={form.durationMinutes}
-              onChange={(e) =>
-                setField("durationMinutes", e.target.value)
-              }
+              onChange={(e) => setField("durationMinutes", e.target.value)}
               inputMode="numeric"
               className={inputStyle}
               disabled={submitting || isSubmitted}
             />
           </Field>
 
-          <Field label="Level" error={errors.level}>
-            <select
-              value={form.level || ""}
-              onChange={(e) => setField("level", e.target.value)}
-              className={inputStyle}
-              disabled={submitting || isSubmitted}
+          {/* ── Tech Stack selector (full width) ── */}
+          <div className="sm:col-span-2">
+            <Field
+              label="Tech Stacks"
+              hint="select one or more"
+              error={errors.techStacks}
             >
-              <option value="">Select level</option>
+              <MultiSelectDropdown
+                options={techOptions}
+                value={selectedTechIds}
+                onChange={handleTechChange}
+                getOptionLabel={(o: Option) => o.label}
+                getOptionValue={(o: Option) => o.value}
+                disabled={submitting || isSubmitted}
+                placeholder="Search & select tech stacks…"
+                error={!!errors.techStacks}
+              />
+            </Field>
+          </div>
 
-              {levelOptions.map((l) => (
-                <option key={l.value} value={l.value}>
-                  {l.label}
-                </option>
-              ))}
-            </select>
-          </Field>
+          {/* ── Per-tech level selectors (appear once a tech is chosen) ── */}
+          {form.techStacks.length > 0 && (
+            <div className="sm:col-span-2">
+              <p className="text-xs font-bold tracking-wide text-gray-700 mb-2">
+                EXPERIENCE LEVEL PER TECH
+              </p>
 
-          <Field
-            label="Tech Stack"
-            hint="multi-select dropdown"
-            error={errors.techStackIds}
-          >
-            <MultiSelectDropdown
-              options={techOptions}
-              value={form.techStackIds || []}
-              onChange={(v) => setField("techStackIds", v)}
-              getOptionLabel={(o: Option) => o.label}
-              getOptionValue={(o: Option) => o.value}
-              disabled={submitting || isSubmitted}
-              placeholder="Search & select tech..."
-              error={!!errors.techStackIds}
-            />
-          </Field>
+              <div className="space-y-2">
+                {form.techStacks.map((entry) => {
+                  // Resolve the display name from the available options
+                  const techName =
+                    techOptions.find((o) => o.value === entry.id)?.label ?? entry.id
+
+                  return (
+                    <div
+                      key={entry.id}
+                      className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2"
+                    >
+                      {/* Tech name badge */}
+                      <span className="flex-1 truncate text-sm font-medium text-gray-800">
+                        {techName}
+                      </span>
+
+                      {/* Level dropdown */}
+                      <select
+                        value={entry.level}
+                        onChange={(e) => handleLevelChange(entry.id, e.target.value)}
+                        disabled={submitting || isSubmitted}
+                        className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:opacity-60"
+                      >
+                        {LEVELS.map((lvl) => (
+                          <option key={lvl} value={lvl}>
+                            {lvl}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
         </div>
 
-        {/* Buttons */}
+        {/* ── Buttons ── */}
         <div className="flex justify-end gap-3 pt-4">
 
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="rounded-lg border cursor-pointer border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
           >
             Cancel
           </button>
@@ -184,15 +217,11 @@ export default function HrCreateEditModal({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg cursor-pointer bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 disabled:opacity-60"
+            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 disabled:opacity-60"
           >
             {submitting
-              ? editRow
-                ? "Updating..."
-                : "Creating..."
-              : editRow
-              ? "Update Test"
-              : "Create Test"}
+              ? editRow ? "Updating..." : "Creating..."
+              : editRow ? "Update Test" : "Create Test"}
           </button>
 
         </div>

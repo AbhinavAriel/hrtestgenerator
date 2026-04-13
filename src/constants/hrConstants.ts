@@ -7,6 +7,8 @@ export const DEFAULT_FORM: HrForm = {
   phoneNumber: "",
   totalQuestions: "10",
   durationMinutes: "20",
-  level: "Beginner",
-  techStackIds: [],
+  techStacks: [],
 }
+
+export const LEVELS = ["Beginner", "Intermediate", "Professional"] as const
+export type Level = typeof LEVELS[number]

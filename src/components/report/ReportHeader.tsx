@@ -67,11 +67,11 @@ export function ReportHeader({ report, isRejected, onCancelClick }: ReportHeader
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Level pill */}
-          {level && (
+          {/* {level && (
             <span className="inline-flex rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600">
               {level}
             </span>
-          )}
+          )} */}
 
           {/* Status pill */}
           <span className="inline-flex rounded-full border px-3 py-1 text-xs font-semibold capitalize">

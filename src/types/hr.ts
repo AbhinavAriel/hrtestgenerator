@@ -1,3 +1,14 @@
+export interface HrTechStackEntry {
+  id: string    // TechStack GUID
+  level: string // "Beginner" | "Intermediate" | "Professional"
+}
+
+export interface HrTechStackWithLevel {
+  id: string
+  name: string
+  level: string
+}
+
 export interface HrForm {
   firstName: string
   lastName: string
@@ -5,8 +16,8 @@ export interface HrForm {
   phoneNumber: string
   totalQuestions: string
   durationMinutes: string
-  level: string
-  techStackIds: string[]
+  // Per-tech selection — replaces the old flat `techStackIds` + single `level`
+  techStacks: HrTechStackEntry[]
 }
 
 export interface HrMeta {
@@ -33,6 +44,8 @@ export interface HrRow {
   totalQuestions?: number | null
   durationMinutes?: number | null
   techStacks?: string[]
+  techStackLevels?: HrTechStackWithLevel[]
+  TechStackLevels?: HrTechStackWithLevel[]
   status?: string
   answeredCount?: number
   correctCount?: number
@@ -40,9 +53,10 @@ export interface HrRow {
   submittedAtUtc?: string | null
   testToken?: string | null
   expiresAtUtc?: string | null
-  scorePercentage?: number  
+  scorePercentage?: number
   isPassed?: boolean
   isRejected?: boolean
+  cancellationReason?: string | null
 }
 
 export interface HrCreateEditModalProps {
@@ -65,8 +79,7 @@ export interface FormErrors {
   phoneNumber?: string
   totalQuestions?: string
   durationMinutes?: string
-  level?: string
-  techStackIds?: string
+  techStacks?: string
 }
 
 export interface HrPagedData {

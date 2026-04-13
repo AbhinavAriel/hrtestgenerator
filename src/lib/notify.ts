@@ -19,16 +19,14 @@ export function validateCreateTestForm(form: HrForm): FormErrors {
   if (!phone) errors.phoneNumber = "Phone number is required";
   else if (phone.length < 10) errors.phoneNumber = "Enter a valid phone number";
 
-  if (!safeTrim(form.level)) errors.level = "Level is required";
-
   const tq = Number(form.totalQuestions);
   if (!Number.isFinite(tq) || tq < 1) errors.totalQuestions = "Enter valid total questions";
 
   const dm = Number(form.durationMinutes);
   if (!Number.isFinite(dm) || dm < 1) errors.durationMinutes = "Enter valid duration";
 
-  if (!Array.isArray(form.techStackIds) || form.techStackIds.length === 0) {
-    errors.techStackIds = "Select at least 1 tech";
+  if (!Array.isArray(form.techStacks) || form.techStacks.length === 0) {
+    errors.techStacks = "Select at least 1 tech stack";
   }
 
   return errors;
