@@ -2,8 +2,8 @@ export const API_ENDPOINTS = {
 
   AUTH: {
     LOGIN: "api/Auth/login",
-    REGISTER: "api/Auth/register",   
-    // LOGOUT: "api/Auth/logout",   
+    REGISTER: "api/Auth/register",
+    // LOGOUT: "api/Auth/logout",
   },
 
   HR: {
@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
     TESTS: "api/Hr/tests",
     TEST_BY_ID: (id: string) => `api/Hr/tests/${id}`,
     TEST_BY_TOKEN: (token: string) => `api/Hr/tests/by-token/${token}`,
+    BEGIN: (id: string) => `api/Hr/tests/${id}/begin`,
     SUBMIT: (id: string) => `api/Hr/tests/${id}/submit`,
     REPORT: (id: string) => `api/Hr/tests/${id}/report`,
     REJECT: (id: string) => `api/Hr/tests/${id}/reject`,
@@ -29,7 +30,6 @@ export const API_ENDPOINTS = {
     LOGIN: "api/applicant/login",
     DETAILS: "api/applicant/details",
   },
-
 
   SNAPSHOTS: {
     UPLOAD:  "api/Snapshots",

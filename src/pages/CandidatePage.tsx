@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import toast from "react-hot-toast"
 
-import { getHrTestByToken } from "../api/hrApi"
+import { getHrTestByToken, beginTest } from "../api/hrApi"
 import { useTest } from "../context/TestContext"
+import { saveCandidateToken } from "../lib/Candidateauth"
 
 type CandidateForm = {
   name: string
@@ -37,6 +38,7 @@ export default function CandidatePage() {
   const safeToken = useMemo(() => (testId ?? "").trim(), [testId])
 
   const [checking, setChecking] = useState(true)
+  const [starting, setStarting] = useState(false)
   const [apiError, setApiError] = useState("")
 
   const [form, setForm] = useState<CandidateForm>({
@@ -121,9 +123,7 @@ export default function CandidatePage() {
         if (!mounted) return
 
         setForm(next)
-
         setTestId(resolvedTestId)
-
         setUser({
           id: applicantId,
           name: next.name,
@@ -134,7 +134,6 @@ export default function CandidatePage() {
       } catch (err: any) {
 
         if (!mounted) return
-
         const msg = err?.message || "Unable to load candidate details."
         setApiError(msg)
         toast.error(msg)
@@ -147,28 +146,42 @@ export default function CandidatePage() {
     }
 
     loadCandidate()
-
-    return () => {
-      mounted = false
-    }
+    return () => { mounted = false }
 
   }, [safeToken, navigate])
 
-  const handleStart = (e: React.FormEvent) => {
+  const handleStart = async (e: React.FormEvent) => {
 
     e.preventDefault()
 
-    if (checking || apiError) return
-
-    sessionStorage.removeItem(`policyAgreed_${form.testId}`);
-    sessionStorage.removeItem("agreed")
+    if (checking || apiError || starting) return
 
     if (!form.email || form.phone.length !== 10) {
       toast.error("Candidate details incomplete. Contact admin.")
       return
     }
 
-    navigate("/policy", { replace: true })
+    try {
+      setStarting(true)
+
+      // Issue the candidate JWT — this is the sign-in moment
+      const { token, expiresAtUtc, testId } = await beginTest(form.testId)
+
+      if (!token) throw new Error("Failed to start test. Please try again.")
+
+      // Persist to sessionStorage — cleared when tab closes or on Result page
+      saveCandidateToken(token, expiresAtUtc, testId)
+
+      sessionStorage.removeItem(`policyAgreed_${form.testId}`)
+      sessionStorage.removeItem("agreed")
+
+      navigate("/policy", { replace: true })
+
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to start test.")
+    } finally {
+      setStarting(false)
+    }
   }
 
   if (checking) {
@@ -195,18 +208,16 @@ export default function CandidatePage() {
 
         <form onSubmit={handleStart} className="space-y-3">
 
-          <Input label="Full Name" value={form.name} disabled />
-
-          <Input label="Email" value={form.email} disabled />
-
+          <Input label="Full Name"    value={form.name}  disabled />
+          <Input label="Email"        value={form.email} disabled />
           <Input label="Phone Number" value={form.phone} disabled />
 
           <button
             type="submit"
-            disabled={!!apiError}
+            disabled={!!apiError || starting}
             className="w-full bg-linear-to-r from-blue-500 to-blue-700 cursor-pointer font-semibold text-white p-3 rounded-lg text-base transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Start Test
+            {starting ? "Starting..." : "Start Test"}
           </button>
 
         </form>

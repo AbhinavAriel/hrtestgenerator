@@ -21,6 +21,12 @@ export interface HrTestsResponse {
   data: HrPagedData
 }
 
+export interface CandidateTokenResponse {
+  token: string
+  expiresAtUtc: string
+  testId: string
+}
+
 // ─── Meta ────────────────────────────────────────────────────────────────────
 
 export const getHrMeta = async (): Promise<HrMeta> => {
@@ -44,10 +50,25 @@ export const getHrTestById = (testId: string): Promise<HrRow> => {
   return request<HrRow>(API_ENDPOINTS.HR.TEST_BY_ID(testId))
 }
 
-// ─── Get by token (candidate entry link) ────────────────────────────────────
+// ─── Get by token (candidate entry link) ─────────────────────────────────────
 
 export const getHrTestByToken = (token: string): Promise<HrRow> => {
   return request<HrRow>(API_ENDPOINTS.HR.TEST_BY_TOKEN(token))
+}
+
+// ─── Begin test — issues candidate JWT (called on "Start Test" click) ─────────
+
+export const beginTest = async (testId: string): Promise<CandidateTokenResponse> => {
+  const res = await request<any>(API_ENDPOINTS.HR.BEGIN(testId), {
+    method: "POST",
+  })
+  // Unwrap envelope: { isSuccess, data: { token, expiresAtUtc } }
+  const payload = res?.data ?? res
+  return {
+    token:        payload?.token        ?? payload?.Token        ?? "",
+    expiresAtUtc: payload?.expiresAtUtc ?? payload?.ExpiresAtUtc ?? "",
+    testId: payload?.testId ?? payload?.TestId ?? testId,
+  }
 }
 
 // ─── Create ──────────────────────────────────────────────────────────────────
@@ -84,12 +105,13 @@ export const submitHrTest = (testId: string): Promise<void> => {
   })
 }
 
+// ─── Report ──────────────────────────────────────────────────────────────────
 
 export const getHrTestReport = (testId: string): Promise<any> => {
   return request<any>(API_ENDPOINTS.HR.REPORT(testId))
 }
 
-// ─── Reject (admin override for suspicious passed result) ─────────────────────
+// ─── Reject ──────────────────────────────────────────────────────────────────
 
 export const rejectHrTest = (testId: string, cancellationReason: string): Promise<void> => {
   return request<void>(API_ENDPOINTS.HR.REJECT(testId), {

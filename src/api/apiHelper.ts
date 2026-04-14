@@ -1,30 +1,3 @@
-/**
- * apiHelper.ts
- *
- * Shared utilities for API modules.
- *
- * WHY unwrap() exists
- * -------------------
- * The backend wraps most responses in an envelope:
- *   { isSuccess: boolean, message: string, data: T }
- *
- * `request()` in http.ts already returns res.data (the axios response body),
- * so by the time a payload reaches unwrap() it looks like:
- *   { isSuccess: true, message: "...", data: <actual payload> }
- *
- * unwrap() checks the isSuccess flag and either throws the server message
- * or returns the inner `data` field.
- *
- * API modules that return a flat value (no envelope) — e.g. authApi — should
- * NOT call unwrap().
- *
- * normalizeApiError()
- * -------------------
- * After the response interceptor in http.ts runs, every rejected promise is
- * already a plain ApiError: { message, status, data }.
- * normalizeApiError re-throws it as a proper Error so stack traces are preserved
- * and callers can use instanceof Error checks.
- */
 
 export interface ServerEnvelope<T = unknown> {
   isSuccess: boolean

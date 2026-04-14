@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTest } from "../context/TestContext";
+import { clearCandidateToken } from "../lib/Candidateauth";
 
 export default function Result() {
 
@@ -11,6 +12,9 @@ export default function Result() {
     setAgreed(false);
     setAnswers({});
     setIsSubmitted(true);
+
+    // Clear the candidate JWT — assessment session is over
+    clearCandidateToken();
 
     const handlePopState = () => {
       navigate("/test-submitted", { replace: true });
