@@ -52,6 +52,7 @@ function isCandidateRequest(config: InternalAxiosRequestConfig): boolean {
   if (method === "POST" && /api\/Hr\/tests\/[^/]+\/submit$/i.test(url)) return true
 
   // Upload a snapshot during assessment
+  // Now requires Candidate JWT (previously was AllowAnonymous — now secured)
   if (method === "POST" && /api\/Snapshots$/i.test(url)) return true
 
   return false
@@ -99,11 +100,6 @@ api.interceptors.request.use(
       }
 
       const token = getCandidateToken(testId)
-      console.log("[AUTH DEBUG]", { url: config.url, testId, token: token ? "present" : "MISSING" })
-      console.log("[STORED]", {
-        stored_test_id: sessionStorage.getItem("candidate_test_id"),
-        stored_token: sessionStorage.getItem("candidate_token") ? "present" : "MISSING"
-      })
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`

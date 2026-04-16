@@ -185,7 +185,7 @@ export default function HrCreateEditModal({
                         value={entry.level}
                         onChange={(e) => handleLevelChange(entry.id, e.target.value)}
                         disabled={submitting || isSubmitted}
-                        className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:opacity-60"
+                        className="rounded-lg border cursor-pointer border-gray-300 bg-white px-2 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:opacity-60"
                       >
                         {LEVELS.map((lvl) => (
                           <option key={lvl} value={lvl}>
@@ -209,7 +209,7 @@ export default function HrCreateEditModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-lg border cursor-pointer border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
           >
             Cancel
           </button>
@@ -217,7 +217,7 @@ export default function HrCreateEditModal({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 disabled:opacity-60"
+            className="rounded-lg bg-blue-600 cursor-pointer px-5 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 disabled:opacity-60"
           >
             {submitting
               ? editRow ? "Updating..." : "Creating..."
