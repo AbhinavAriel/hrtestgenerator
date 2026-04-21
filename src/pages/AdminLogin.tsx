@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { isAdminAuthenticated } from "../lib/adminAuth";
 import { useAdminLogin } from "../hooks/useAdminLogin";
-import Logo from "../../src/assets/logo.webp";
+import Logo from "../../public/logo.webp";
 
 export default function AdminLogin() {
   const { form, submitting, onChange, onSubmit, redirectTo } = useAdminLogin();
