@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { isAdminAuthenticated } from "../lib/adminAuth";
 import { useAdminLogin } from "../hooks/useAdminLogin";
-import Logo from "../../public/logo.webp";
+import Logo from "../assets/logo.webp";
 import BG1 from '../assets/bg-1.webp'
 
 export default function AdminLogin() {
