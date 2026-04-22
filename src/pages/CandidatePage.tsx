@@ -5,6 +5,7 @@ import toast from "react-hot-toast"
 import { getHrTestByToken, beginTest } from "../api/hrApi"
 import { useTest } from "../context/TestContext"
 import { saveCandidateToken } from "../lib/Candidateauth"
+import BG2 from '../assets/bg-2.webp'
 
 type CandidateForm = {
   name: string
@@ -18,7 +19,7 @@ const onlyDigits = (v: string) => (v || "").replace(/\D/g, "")
 
 function FullPageLoader({ message = "Loading..." }: { message?: string }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url(../../public/bg-2.webp)] bg1 bg-cover px-4">
+    <div className="min-h-screen flex items-center justify-center bg1 bg-cover px-4" style={{ backgroundImage: `url(${BG2})` }}>
       <div className="bg-white/90 backdrop-blur-xl shadow-xl rounded-2xl p-6 w-full max-w-md">
         <div className="flex items-center gap-3">
           <div className="h-5 w-5 rounded-full border-2 border-gray-300 border-t-gray-800 animate-spin" />
@@ -189,7 +190,7 @@ export default function CandidatePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url(../../public/bg-2.webp)] bg1 bg-cover">
+    <div className="min-h-screen flex items-center justify-center bg1 bg-cover " style={{ backgroundImage: `url(${BG2})` }}>
       <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-lg backdrop-blur-3xl z-50">
 
         <h2 className="text-2xl font-bold mb-2 text-center">

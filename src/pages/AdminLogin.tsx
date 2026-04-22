@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 import { isAdminAuthenticated } from "../lib/adminAuth";
 import { useAdminLogin } from "../hooks/useAdminLogin";
 import Logo from "../../public/logo.webp";
+import BG1 from '../assets/bg-1.webp'
 
 export default function AdminLogin() {
   const { form, submitting, onChange, onSubmit, redirectTo } = useAdminLogin();
@@ -11,7 +12,7 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-[url(../../public/bg-1.webp)] bg1 bg-cover bg-center px-4 py-8">
+    <div className="min-h-screen bg1 bg-cover bg-center px-4 py-8" style={{ backgroundImage: `url(${BG1})` }}>
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl items-center justify-center">
         <div className="grid w-full overflow-hidden rounded-4xl border border-white/20 bg-white/15 shadow-2xl backdrop-blur-xl lg:grid-cols-[1.05fr_0.95fr] z-50">
 

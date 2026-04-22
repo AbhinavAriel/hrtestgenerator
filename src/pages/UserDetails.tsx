@@ -1,5 +1,6 @@
 import { ChangeEvent } from "react"
 import { useUserDetails } from "../hooks/useUserDetails"
+import BG2 from '../assets/bg-2.webp'
 
 export default function UserDetails() {
 
@@ -13,7 +14,7 @@ export default function UserDetails() {
   } = useUserDetails()
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url(../../public/bg-2.webp)] bg1 bg-cover">
+    <div className="min-h-screen flex items-center justify-center bg1 bg-cover" style={{ backgroundImage: `url(${BG2})` }}>
 
       <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-lg backdrop-blur-3xl z-50">
 

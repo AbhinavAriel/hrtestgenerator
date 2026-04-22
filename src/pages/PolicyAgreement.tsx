@@ -3,6 +3,7 @@ import { useTest } from "../context/TestContext"
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import { getHrTestById } from "../api/hrApi"
+import BG1 from '../assets/bg-1.webp'
 import { useMediaPermissions, PermissionState } from "../hooks/useMediaPermissions"
 
 // ─── Step type ───────────────────────────────────────────────────────────────
@@ -13,7 +14,7 @@ type Step = "loading" | "policy" | "permissions" | "ready"
 
 function FullPageLoader({ message = "Loading..." }: { message?: string }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url(../../bg-1.jpg)] bg-cover bg1 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-cover bg1 px-4" style={{ backgroundImage: `url(${BG1})` }}>
       <div className="bg-white/90 backdrop-blur-xl shadow-xl rounded-2xl p-6 w-full max-w-md">
         <div className="flex items-center gap-3">
           <div className="h-5 w-5 rounded-full border-2 border-gray-300 border-t-gray-800 animate-spin" />
@@ -150,7 +151,7 @@ export default function PolicyAgreement() {
 
   if (step === "policy") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[url(../../bg-1.jpg)] bg-cover bg1">
+      <div className="min-h-screen flex items-center justify-center bg-cover bg1" style={{ backgroundImage: `url(${BG1})` }}>
         <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-2xl relative z-50">
 
           <div className="flex items-center gap-3 mb-6">
@@ -225,7 +226,7 @@ export default function PolicyAgreement() {
       permissions.camera === "error"  || permissions.mic === "error"
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[url(../../bg-1.jpg)] bg-cover bg1">
+      <div className="min-h-screen flex items-center justify-center bg-cover bg1" style={{ backgroundImage: `url(${BG1})` }}>
         <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-2xl relative z-50">
 
           <div className="flex items-center gap-3 mb-6">
