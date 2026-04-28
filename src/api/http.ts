@@ -7,7 +7,7 @@ import axios, {
 
 import { getCandidateToken } from "../lib/Candidateauth"
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "https://assessment.arielsoftwares.in/"
+const API_BASE = import.meta.env.VITE_API_URL ?? "https://api.assessment.arielsoftwares.in"
 
 export interface ApiError {
   message: string
